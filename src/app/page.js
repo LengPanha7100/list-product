@@ -925,7 +925,7 @@ export default function Home() {
                     size="md"
                     className="w-full"
                     classNames={{
-                      input: "text-sm",
+                      input: "text-base [@media(max-width:768px)]:text-base",
                       inputWrapper:
                         "bg-white shadow-sm border-gray-300 focus-within:border-blue-500",
                     }}
