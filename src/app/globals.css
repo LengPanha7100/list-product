@@ -97,7 +97,7 @@ select.no-select-highlight option::selection {
 
 /* Anti-zoom CSS for mobile devices */
 @media screen and (max-width: 768px) {
-  /* Prevent zoom on all form inputs */
+  /* Prevent zoom on all form inputs with smaller font size */
   input[type="text"],
   input[type="number"],
   input[type="email"],
@@ -108,7 +108,7 @@ select.no-select-highlight option::selection {
   input[type="date"],
   select,
   textarea {
-    font-size: 16px !important;
+    font-size: 14px !important; /* Smaller than 16px but still readable */
     -webkit-appearance: none;
     -webkit-border-radius: 0;
     border-radius: 0;
@@ -131,7 +131,7 @@ select.no-select-highlight option::selection {
     text-size-adjust: 100%;
   }
   
-  /* Force 16px font size for NextUI inputs */
+  /* Force smaller font size for NextUI inputs */
   [data-slot="input"],
   [data-slot="input"] input,
   [data-slot="input"] textarea,
@@ -140,15 +140,21 @@ select.no-select-highlight option::selection {
   .nextui-input input,
   .nextui-select input,
   .nextui-datepicker input {
-    font-size: 16px !important;
-    line-height: 1.5 !important;
+    font-size: 14px !important;
+    line-height: 1.4 !important;
   }
   
-  /* Prevent zoom on modal interactions */
+  /* Prevent zoom on modal interactions with smaller font */
   [role="dialog"] input,
   [role="dialog"] select,
   [role="dialog"] textarea {
-    font-size: 16px !important;
+    font-size: 14px !important;
+  }
+
+  /* Smaller font for labels and placeholders in mobile */
+  [data-slot="label"],
+  .nextui-input label {
+    font-size: 12px !important;
   }
 }
 

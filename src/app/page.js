@@ -471,7 +471,7 @@ export default function Home() {
         if (value === "" || value === null || value === undefined) {
           processedValue = "";
         } else {
-          processedValue = Number(value) || 0;
+        processedValue = Number(value) || 0;
         }
       } else if (field === "dueDate") {
         // Handle date conversion more safely
@@ -541,7 +541,7 @@ export default function Home() {
           // Refresh the product list
           await fetchProducts();
           handleCloseForm();
-        } else {
+      } else {
           setError('Failed to update product');
         }
       } else {
@@ -550,7 +550,7 @@ export default function Home() {
         if (response.success) {
           // Refresh the product list
           await fetchProducts();
-          handleCloseForm();
+      handleCloseForm();
         } else {
           setError('Failed to create product');
         }
@@ -613,8 +613,8 @@ export default function Home() {
       if (response.success) {
         // Refresh the product list
         await fetchProducts();
-        setShowDeleteConfirm(false);
-        setProductToDelete(null);
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
       } else {
         setError('Failed to delete product');
       }
@@ -848,10 +848,10 @@ export default function Home() {
                       setFilterText(value);
                       setCurrentPage(1); // Reset to first page when searching
                     }}
-                    size="md"
+                    size="sm"
                     className="w-full"
                     classNames={{
-                      input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
+                      input: "text-xs placeholder:text-xs",
                       inputWrapper:
                         "bg-white shadow-sm border-gray-300 focus-within:border-blue-500",
                     }}
@@ -1245,7 +1245,7 @@ export default function Home() {
           isOpen={showAddForm}
           onOpenChange={setShowAddForm}
           placement="center"
-          size="xl"
+          size="md"
           scrollBehavior="inside"
           backdrop="blur"
           isDismissable={true}
@@ -1253,10 +1253,10 @@ export default function Home() {
           hideCloseButton={false}
           classNames={{
             backdrop: "bg-black/60",
-            base: "border-none shadow-2xl rounded-xl w-[95vw] h-auto max-w-[95vw] max-h-[80vh] mx-4 my-auto md:w-[600px] md:h-auto md:max-w-[600px] md:max-h-[80vh] [@media(width:428px)]:w-[400px] [@media(width:428px)]:h-auto [@media(width:428px)]:max-w-[400px] [@media(width:428px)]:max-h-[75vh] [@media(width:428px)]:mx-3",
-            header: "border-b border-gray-200 rounded-t-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 [@media(width:428px)]:p-3 flex-shrink-0",
-            body: "py-4 px-4 [@media(width:428px)]:py-3 [@media(width:428px)]:px-3 flex-shrink-0",
-            footer: "border-t border-gray-200 bg-gray-50 p-4 [@media(width:428px)]:p-3 flex-shrink-0 rounded-b-xl",
+            base: "border-none shadow-2xl rounded-xl w-[90vw] h-auto max-w-[90vw] max-h-[75vh] mx-4 my-auto md:w-[500px] md:h-auto md:max-w-[500px] md:max-h-[75vh]",
+            header: "border-b border-gray-200 rounded-t-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-3 flex-shrink-0",
+            body: "py-3 px-3 flex-shrink-0",
+            footer: "border-t border-gray-200 bg-gray-50 p-3 flex-shrink-0 rounded-b-xl",
           }}
         >
           <ModalContent>
@@ -1268,10 +1268,10 @@ export default function Home() {
                       <Icons.Package />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-bold text-gray-900 [@media(width:428px)]:text-base truncate">
+                      <h2 className="text-base font-bold text-gray-900 truncate">
                         {editingProduct ? "កែប្រែទំនិញ" : "បន្ថែមទំនិញថ្មី"}
                       </h2>
-                      <p className="text-gray-600 text-sm [@media(width:428px)]:text-xs truncate">
+                      <p className="text-gray-600 text-sm truncate">
                         {editingProduct
                           ? "កែប្រែព័ត៌មានទំនិញរបស់អ្នក"
                           : "បំពេញព័ត៌មានទំនិញថ្មីរបស់អ្នក"}
@@ -1286,9 +1286,9 @@ export default function Home() {
                       e.preventDefault();
                       handleAddProduct();
                     }} 
-                    className="space-y-3 [@media(width:428px)]:space-y-2"
+                    className="space-y-2"
                   >
-                    <div className="grid grid-cols-1 gap-3 [@media(width:428px)]:gap-2">
+                    <div className="grid grid-cols-1 gap-2">
                         {/* Type Selection */}
                         <Select
                           label="ប្រភេទទំនិញ"
@@ -1300,12 +1300,13 @@ export default function Home() {
                           }}
                           isRequired={true}
                           variant="bordered"
-                          size="md"
+                          size="sm"
                           classNames={{
-                            trigger: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(max-width:768px)]:text-sm",
-                            value: "text-base [@media(max-width:768px)]:text-base",
-                            listbox: "text-base [@media(max-width:768px)]:text-base",
+                            trigger: "bg-white shadow-sm h-10 rounded-xl",
+                            label: "text-xs",
+                            value: "text-xs",
+                            listbox: "text-xs",
+                            popoverContent: "text-xs",
                           }}
                         >
                           {productTypes.map((type) => (
@@ -1313,10 +1314,11 @@ export default function Home() {
                               key={type}
                               value={type}
                               startContent={
-                                <span>
+                                <span className="text-xs">
                                   {filters.find((f) => f.name === type)?.icon}
                                 </span>
                               }
+                              className="text-xs"
                             >
                               {type}
                             </SelectItem>
@@ -1333,11 +1335,11 @@ export default function Home() {
                           }
                           isRequired
                           variant="bordered"
-                          size="md"
+                          size="sm"
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(max-width:768px)]:text-sm",
-                            input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
+                            inputWrapper: "bg-white shadow-sm h-10 rounded-xl",
+                            label: "text-xs",
+                            input: "text-xs placeholder:text-xs",
                           }}
                         />
 
@@ -1348,14 +1350,15 @@ export default function Home() {
                           onChange={(date) => handleFormChange("dueDate", date)}
                           isRequired
                           variant="bordered"
-                          size="md"
+                          size="sm"
                           showMonthAndYearPickers
                           inert={false}
                           classNames={{
                             base: "bg-white",
-                            inputWrapper: "bg-white shadow-sm border-gray-300 focus-within:border-blue-500 [@media(max-width:768px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(max-width:768px)]:text-sm",
-                            input: "text-base [@media(max-width:768px)]:text-base",
+                            inputWrapper: "bg-white shadow-sm border-gray-300 focus-within:border-blue-500 h-10 rounded-xl",
+                            label: "text-xs",
+                            input: "text-xs",
+                            popoverContent: "text-xs",
                           }}
                         />
 
@@ -1371,16 +1374,16 @@ export default function Home() {
                           onFocus={() => {
                             if (formData.quantity === 0 || formData.quantity === 1) {
                               handleFormChange("quantity", "");
-                            }
+                          }
                           }}
                           min="1"
                           isRequired
                           variant="bordered"
-                          size="md"
+                          size="sm"
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(max-width:768px)]:text-sm",
-                            input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
+                            inputWrapper: "bg-white shadow-sm h-10 rounded-xl",
+                            label: "text-xs",
+                            input: "text-xs placeholder:text-xs",
                           }}
                         />
 
@@ -1396,20 +1399,20 @@ export default function Home() {
                           onFocus={() => {
                             if (formData.price === 0) {
                               handleFormChange("price", "");
-                            }
+                          }
                           }}
                           min="0"
                           step="0.01"
                           isRequired
                           variant="bordered"
-                          size="md"
+                          size="sm"
                           endContent={
-                            <span className="text-gray-600 font-medium text-sm [@media(max-width:768px)]:text-base">៛</span>
+                            <span className="text-gray-600 font-medium text-xs">៛</span>
                           }
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(max-width:768px)]:text-sm",
-                            input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
+                            inputWrapper: "bg-white shadow-sm h-10 rounded-xl",
+                            label: "text-xs",
+                            input: "text-xs placeholder:text-xs",
                           }}
                         />
                       </div>
@@ -1421,15 +1424,15 @@ export default function Home() {
                       color="danger"
                       variant="light"
                       onPress={onClose}
-                      size="md"
-                      className="[@media(width:428px)]:text-sm [@media(width:428px)]:h-9 h-10 min-w-[100px] [@media(width:428px)]:min-w-[80px] rounded-xl"
+                      size="sm"
+                      className="text-sm h-9 min-w-[80px] rounded-xl"
                     >
                       បោះបង់
                     </Button>
                     <Button 
                       color="primary" 
-                      size="md"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold [@media(width:428px)]:text-sm [@media(width:428px)]:h-9 h-10 min-w-[120px] [@media(width:428px)]:min-w-[100px] rounded-xl"
+                      size="sm"
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold text-sm h-9 min-w-[100px] rounded-xl"
                       onPress={() => {
                         try {
                           handleAddProduct();
