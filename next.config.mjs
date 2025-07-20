@@ -5,9 +5,6 @@ const nextConfig = {
   // Enable React strict mode
   reactStrictMode: true,
   
-  // Enable SWC minification
-  swcMinify: true,
-  
   // PWA is disabled in development and enabled in production
   ...withPWA({
     dest: 'public',
