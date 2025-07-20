@@ -323,12 +323,12 @@ const dateUtils = {
   // Safe date validation
   isValidDateString: (dateString) => {
     if (!dateString || typeof dateString !== "string") return false;
-    
+
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(dateString)) return false;
-    
+
     try {
-      const date = new Date(dateString + 'T00:00:00');
+      const date = new Date(dateString + "T00:00:00");
       return date instanceof Date && !isNaN(date.getTime());
     } catch (error) {
       return false;
@@ -341,7 +341,7 @@ const dateUtils = {
       // Return fallback date if invalid
       return dateUtils.getToday();
     }
-    
+
     try {
       return new CalendarDate(
         jsDate.getFullYear(),
@@ -362,11 +362,12 @@ export default function Home() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const [editingProduct, setEditingProduct] = useState(null);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
 
-  const [formData, setFormData] = useState({
+  const [createFormData, setCreateFormData] = useState({
     type: "សាច់",
     name: "",
     dueDate: dateUtils.getToday(),
@@ -375,8 +376,16 @@ export default function Home() {
     amount: 0,
   });
 
-  const [sortBy, setSortBy] = useState("");
-  const [sortOrder, setSortOrder] = useState("asc");
+  const [editFormData, setEditFormData] = useState({
+    type: "សាច់",
+    name: "",
+    dueDate: dateUtils.getToday(),
+    quantity: "",
+    price: "",
+    amount: 0,
+  });
+
+
   const [filterText, setFilterText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("ទាំងអស់");
   const [currentPage, setCurrentPage] = useState(1);
@@ -397,10 +406,10 @@ export default function Home() {
       if (response.success) {
         setInvoiceData(response.data);
       } else {
-        setError('Failed to fetch products');
+        setError("Failed to fetch products");
       }
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error("Error fetching products:", error);
       setError(handleApiError(error));
     } finally {
       setLoading(false);
@@ -462,7 +471,7 @@ export default function Home() {
     },
   ];
 
-  const handleFormChange = (field, value) => {
+  const handleCreateFormChange = (field, value) => {
     let processedValue = value;
 
     try {
@@ -471,7 +480,7 @@ export default function Home() {
         if (value === "" || value === null || value === undefined) {
           processedValue = "";
         } else {
-        processedValue = Number(value) || 0;
+          processedValue = Number(value) || 0;
         }
       } else if (field === "dueDate") {
         // Handle date conversion more safely
@@ -489,13 +498,14 @@ export default function Home() {
         }
       }
 
-      const newFormData = { ...formData, [field]: processedValue };
+      const newFormData = { ...createFormData, [field]: processedValue };
 
       // Only calculate amount if both quantity and price are valid numbers
       if (field === "quantity" || field === "price") {
-        const qty = field === "quantity" ? processedValue : formData.quantity;
-        const price = field === "price" ? processedValue : formData.price;
-        
+        const qty =
+          field === "quantity" ? processedValue : createFormData.quantity;
+        const price = field === "price" ? processedValue : createFormData.price;
+
         if (qty !== "" && price !== "" && !isNaN(qty) && !isNaN(price)) {
           newFormData.amount = Number(qty) * Number(price);
         } else {
@@ -503,97 +513,152 @@ export default function Home() {
         }
       }
 
-      setFormData(newFormData);
+      setCreateFormData(newFormData);
     } catch (error) {
-      console.error("Form change error:", error);
+      console.error("Create form change error:", error);
       // Keep the previous value if there's an error
     }
   };
 
-  const handleAddProduct = async () => {
+  const handleEditFormChange = (field, value) => {
+    let processedValue = value;
+
+    try {
+      if (field === "quantity" || field === "price") {
+        // Handle empty string to allow clearing input
+        if (value === "" || value === null || value === undefined) {
+          processedValue = "";
+        } else {
+          processedValue = Number(value) || 0;
+        }
+      } else if (field === "dueDate") {
+        // Handle date conversion more safely
+        if (value === null || value === undefined) {
+          processedValue = dateUtils.getToday();
+        } else if (typeof value === "string") {
+          // If it's a string, try to convert it safely
+          const convertedDate = dateUtils.stringToDateValue(value);
+          processedValue = convertedDate || dateUtils.getToday();
+        } else if (value && typeof value === "object") {
+          // It's already a CalendarDate object, use it directly
+          processedValue = value;
+        } else {
+          processedValue = dateUtils.getToday();
+        }
+      }
+
+      const newFormData = { ...editFormData, [field]: processedValue };
+
+      // Only calculate amount if both quantity and price are valid numbers
+      if (field === "quantity" || field === "price") {
+        const qty =
+          field === "quantity" ? processedValue : editFormData.quantity;
+        const price = field === "price" ? processedValue : editFormData.price;
+
+        if (qty !== "" && price !== "" && !isNaN(qty) && !isNaN(price)) {
+          newFormData.amount = Number(qty) * Number(price);
+        } else {
+          newFormData.amount = 0;
+        }
+      }
+
+      setEditFormData(newFormData);
+    } catch (error) {
+      console.error("Edit form change error:", error);
+      // Keep the previous value if there's an error
+    }
+  };
+
+  const handleCreateProduct = async () => {
     try {
       setActionLoading(true);
       setError(null);
-      
-      // Prevent zoom on form submission by blurring active element
-      if (document.activeElement) {
-        document.activeElement.blur();
-      }
-      
-      // Force viewport scale to 1 (prevent zoom)
-      const viewport = document.querySelector('meta[name="viewport"]');
-      if (viewport) {
-        viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
-      }
-      
+
       // Convert CalendarDate to string for storage
       const productData = {
-        ...formData,
-        dueDate: dateUtils.dateValueToString(formData.dueDate) || formData.dueDate,
+        ...createFormData,
+        dueDate:
+          dateUtils.dateValueToString(createFormData.dueDate) ||
+          createFormData.dueDate,
         // Remove amount as it will be calculated on the backend
         amount: undefined,
       };
 
-      if (editingProduct) {
-        // Update existing product
-        const response = await productApi.update(editingProduct.id, productData);
-        if (response.success) {
-          // Refresh the product list
-          await fetchProducts();
-          handleCloseForm();
+      // Create new product
+      const response = await productApi.create(productData);
+      if (response.success) {
+        // Refresh the product list
+        await fetchProducts();
+        handleCloseCreateForm();
       } else {
-          setError('Failed to update product');
-        }
-      } else {
-        // Create new product
-        const response = await productApi.create(productData);
-        if (response.success) {
-          // Refresh the product list
-          await fetchProducts();
-      handleCloseForm();
-        } else {
-          setError('Failed to create product');
-        }
+        setError("Failed to create product");
       }
     } catch (error) {
-      console.error("Add/Update product error:", error);
+      console.error("Create product error:", error);
       setError(handleApiError(error));
     } finally {
       setActionLoading(false);
-      
-      // Ensure focus is removed from any input to prevent zoom
-      if (document.activeElement && document.activeElement.tagName !== 'BODY') {
-        document.activeElement.blur();
+    }
+  };
+
+  const handleUpdateProduct = async () => {
+    try {
+      setActionLoading(true);
+      setError(null);
+
+      // Convert CalendarDate to string for storage
+      const productData = {
+        ...editFormData,
+        dueDate:
+          dateUtils.dateValueToString(editFormData.dueDate) ||
+          editFormData.dueDate,
+        // Remove amount as it will be calculated on the backend
+        amount: undefined,
+      };
+
+      // Update existing product
+      const response = await productApi.update(editingProduct.id, productData);
+      if (response.success) {
+        // Refresh the product list
+        await fetchProducts();
+        handleCloseEditForm();
+      } else {
+        setError("Failed to update product");
       }
+    } catch (error) {
+      console.error("Update product error:", error);
+      setError(handleApiError(error));
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleEditProduct = (product) => {
     try {
       setEditingProduct(product);
-      const editFormData = { ...product };
+      const formData = { ...product };
 
       // Safely convert date string back to DateValue
       if (product.dueDate && typeof product.dueDate === "string") {
         const convertedDate = dateUtils.stringToDateValue(product.dueDate);
-        editFormData.dueDate = convertedDate || dateUtils.getToday();
+        formData.dueDate = convertedDate || dateUtils.getToday();
       } else if (product.dueDate && typeof product.dueDate === "object") {
-        editFormData.dueDate = product.dueDate;
+        formData.dueDate = product.dueDate;
       } else {
-        editFormData.dueDate = dateUtils.getToday();
+        formData.dueDate = dateUtils.getToday();
       }
 
-      setFormData(editFormData);
-      setShowAddForm(true);
+      setEditFormData(formData);
+      setShowEditForm(true);
     } catch (error) {
       console.error("Edit product error:", error);
       // Reset form to safe state if there's an error
-      setFormData({
+      setEditFormData({
         type: "សាច់",
         name: "",
         dueDate: dateUtils.getToday(),
-        quantity: 1,
-        price: 0,
+        quantity: "",
+        price: "",
         amount: 0,
       });
     }
@@ -608,15 +673,15 @@ export default function Home() {
     try {
       setActionLoading(true);
       setError(null);
-      
+
       const response = await productApi.delete(productToDelete.id);
       if (response.success) {
         // Refresh the product list
         await fetchProducts();
-      setShowDeleteConfirm(false);
-      setProductToDelete(null);
+        setShowDeleteConfirm(false);
+        setProductToDelete(null);
       } else {
-        setError('Failed to delete product');
+        setError("Failed to delete product");
       }
     } catch (error) {
       console.error("Delete product error:", error);
@@ -631,21 +696,22 @@ export default function Home() {
     setProductToDelete(null);
   };
 
-  const handleCloseForm = () => {
-    // Prevent zoom when closing form
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
-    
-    // Force viewport reset
-    const viewport = document.querySelector('meta[name="viewport"]');
-    if (viewport) {
-      viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
-    }
-    
-    setShowAddForm(false);
+  const handleCloseCreateForm = () => {
+    setShowCreateForm(false);
+    setCreateFormData({
+      type: "សាច់",
+      name: "",
+      dueDate: dateUtils.getToday(),
+      quantity: "",
+      price: "",
+      amount: 0,
+    });
+  };
+
+  const handleCloseEditForm = () => {
+    setShowEditForm(false);
     setEditingProduct(null);
-    setFormData({
+    setEditFormData({
       type: "សាច់",
       name: "",
       dueDate: dateUtils.getToday(),
@@ -659,17 +725,9 @@ export default function Home() {
     return `${Math.round(amount).toLocaleString("en-US")} ៛`;
   };
 
-  const handleSort = (column) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
-    }
-    setCurrentPage(1); // Reset to first page when sorting
-  };
 
-  const getSortedData = () => {
+
+  const getFilteredData = () => {
     let filtered = [...invoiceData];
 
     // Filter by type first
@@ -688,42 +746,22 @@ export default function Home() {
       );
     }
 
-    // Finally sort if needed
-    if (sortBy) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortBy];
-        let bValue = b[sortBy];
-
-        // Handle different data types
-        if (typeof aValue === "string") {
-          aValue = aValue.toLowerCase();
-          bValue = bValue.toLowerCase();
-        }
-
-        if (sortOrder === "asc") {
-          return aValue > bValue ? 1 : -1;
-        } else {
-          return aValue < bValue ? 1 : -1;
-        }
-      });
-    }
-
     return filtered;
   };
 
-  const filteredAndSortedData = getSortedData();
-  const totalAmount = filteredAndSortedData.reduce(
+  const filteredData = getFilteredData();
+  const totalAmount = filteredData.reduce(
     (sum, item) => sum + item.amount,
     0
   );
-  const totalProducts = filteredAndSortedData.length;
+  const totalProducts = filteredData.length;
   const totalPages = Math.ceil(totalProducts / itemsPerPage);
 
   // Get paginated data
   const getPaginatedData = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return filteredAndSortedData.slice(startIndex, endIndex);
+    return filteredData.slice(startIndex, endIndex);
   };
 
   const paginatedData = getPaginatedData();
@@ -731,16 +769,10 @@ export default function Home() {
   const clearAllFilters = () => {
     setSelectedFilter("ទាំងអស់");
     setFilterText("");
-    setSortBy("");
-    setSortOrder("asc");
     setCurrentPage(1); // Reset to first page when clearing filters
   };
 
-  // Get sort icon helper
-  const getSortIcon = (sortKey) => {
-    if (sortBy !== sortKey) return <Icons.Sort />;
-    return sortOrder === "asc" ? <Icons.SortAsc /> : <Icons.SortDesc />;
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-x-hidden">
@@ -770,7 +802,7 @@ export default function Home() {
                   color="primary"
                   size="md"
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-sm"
-                  onPress={() => setShowAddForm(true)}
+                  onPress={() => setShowCreateForm(true)}
                   startContent={<Icons.Add />}
                 >
                   បន្ថែមទំនិញថ្មី
@@ -871,13 +903,21 @@ export default function Home() {
               <div className="p-3 sm:p-4 bg-red-50 border-l-4 border-red-500 mb-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-red-700">{error}</p>
-                    <button 
+                    <button
                       onClick={() => setError(null)}
                       className="mt-2 text-xs text-red-600 underline hover:text-red-800"
                     >
@@ -893,420 +933,344 @@ export default function Home() {
               <div className="flex items-center justify-center p-8">
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
-                  <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                  <span className="text-gray-600 ml-2">កំពុងទាញយកទិន្នន័យ...</span>
+                  <div
+                    className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"
+                    style={{ animationDelay: "0.1s" }}
+                  ></div>
+                  <div
+                    className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"
+                    style={{ animationDelay: "0.2s" }}
+                  ></div>
+                  <span className="text-gray-600 ml-2">
+                    កំពុងទាញយកទិន្នន័យ...
+                  </span>
                 </div>
               </div>
             )}
 
             {/* Enhanced Table Section */}
             {!loading && (
-            <div className="bg-white overflow-x-hidden">
-              <Table
-                aria-label="Product inventory table"
-                removeWrapper={false}
-                className="w-full"
-                classNames={{
-                  wrapper: "shadow-none w-full overflow-visible",
-                  base: "w-full",
-                  table: "w-full lg:table-auto table-fixed",
-                  th: "bg-gray-100 text-gray-800 font-medium text-xs sm:text-sm lg:text-sm border-b-2 border-gray-200 group-hover:bg-gray-200 transition-colors px-1 sm:px-3 py-2",
-                  td: "py-2 sm:py-3 text-xs sm:text-sm lg:text-sm border-b border-gray-100 px-1 sm:px-3",
-                  tr: "hover:bg-gray-50 transition-colors duration-200",
-                }}
-                topContent={
-                  (sortBy) ? (
-                    <div className="p-3 sm:p-4 bg-white border-b border-gray-200">
-                      <div className="flex justify-end">
-                        <Button
-                          size="sm"
-                          variant="flat"
-                          color="default"
-                          onPress={clearAllFilters}
-                          className="font-medium text-xs"
-                          startContent={<Icons.Clear />}
-                        >
-                          សម្អាត
-                        </Button>
-                      </div>
-                    </div>
-                  ) : null
-                }
-              >
-                <TableHeader>
-                  {/* Category - Desktop Only */}
-                  <TableColumn className="hidden lg:table-cell">
-                    <button
-                      onClick={() => handleSort("type")}
-                      className="flex items-center gap-2 justify-start w-full font-semibold text-gray-800 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-all duration-200 cursor-pointer"
-                    >
-                      ប្រភេទ
-                      <span
-                        className={`transition-colors ${
-                          sortBy === "type" ? "text-blue-600" : "text-gray-400"
-                        }`}
-                      >
-                        {getSortIcon("type")}
+              <div className="bg-white overflow-x-hidden">
+                <Table
+                  aria-label="Product inventory table"
+                  removeWrapper={false}
+                  className="w-full"
+                  classNames={{
+                    wrapper: "shadow-none w-full overflow-visible",
+                    base: "w-full",
+                    table: "w-full lg:table-auto table-fixed",
+                    th: "bg-gray-100 text-gray-800 font-medium text-xs sm:text-sm lg:text-sm border-b-2 border-gray-200 group-hover:bg-gray-200 transition-colors px-1 sm:px-3 py-2",
+                    td: "py-2 sm:py-3 text-xs sm:text-sm lg:text-sm border-b border-gray-100 px-1 sm:px-3",
+                    tr: "hover:bg-gray-50 transition-colors duration-200",
+                  }}
+
+                >
+                  <TableHeader>
+                    {/* Category - Desktop Only */}
+                    <TableColumn className="hidden lg:table-cell">
+                      <span className="font-semibold text-gray-800">ប្រភេទ</span>
+                    </TableColumn>
+
+                    {/* Product Name - Always Visible */}
+                    <TableColumn className="lg:w-auto w-[35%]">
+                      <span className="font-semibold text-gray-800">ឈ្មោះទំនិញ</span>
+                    </TableColumn>
+
+                    {/* Date - Desktop Only */}
+                    <TableColumn className="hidden lg:table-cell">
+                      <span className="font-semibold text-gray-800">កាលបរិច្ឆេទ</span>
+                    </TableColumn>
+
+                    {/* Quantity - Always Visible */}
+                    <TableColumn className="text-center lg:w-auto w-[14%]">
+                      <span className="font-semibold text-gray-800">ចំនួន</span>
+                    </TableColumn>
+
+                    {/* Price - Always Visible */}
+                    <TableColumn className="text-center lg:text-right lg:w-auto w-[32%]">
+                      <span className="font-semibold text-gray-800">តម្លៃ</span>
+                    </TableColumn>
+
+                    {/* Amount - Desktop Only */}
+                    <TableColumn className="hidden lg:table-cell text-right">
+                      <span className="font-semibold text-gray-800">សរុប</span>
+                    </TableColumn>
+
+                    {/* Actions - Always Visible */}
+                    <TableColumn className="text-center lg:w-auto w-[19%]">
+                      <span className="font-semibold text-gray-800">
+                        សកម្មភាព
                       </span>
-                    </button>
-                  </TableColumn>
-
-                  {/* Product Name - Always Visible */}
-                  <TableColumn className="lg:w-auto w-[35%]">
-                    <button
-                      onClick={() => handleSort("name")}
-                      className="flex items-center gap-1 lg:gap-2 justify-start w-full font-semibold text-gray-800 hover:text-blue-600 hover:bg-blue-50 px-1 lg:px-2 py-1 rounded transition-all duration-200 cursor-pointer"
-                    >
-                      ឈ្មោះទំនិញ
-                      <span
-                        className={`transition-colors ${
-                          sortBy === "name" ? "text-blue-600" : "text-gray-400"
-                        }`}
-                      >
-                        {getSortIcon("name")}
-                      </span>
-                    </button>
-                  </TableColumn>
-
-                  {/* Date - Desktop Only */}
-                  <TableColumn className="hidden lg:table-cell">
-                    <button
-                      onClick={() => handleSort("dueDate")}
-                      className="flex items-center gap-2 justify-start w-full font-semibold text-gray-800 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-all duration-200 cursor-pointer"
-                    >
-                      កាលបរិច្ឆេទ
-                      <span
-                        className={`transition-colors ${
-                          sortBy === "dueDate"
-                            ? "text-blue-600"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {getSortIcon("dueDate")}
-                      </span>
-                    </button>
-                  </TableColumn>
-
-                  {/* Quantity - Always Visible */}
-                  <TableColumn className="text-center lg:w-auto w-[14%]">
-                    <button
-                      onClick={() => handleSort("quantity")}
-                      className="flex items-center gap-1 lg:gap-2 justify-center w-full font-semibold text-gray-800 hover:text-blue-600 hover:bg-blue-50 px-0 lg:px-2 py-1 rounded transition-all duration-200 cursor-pointer"
-                    >
-                      ចំនួន
-                      <span
-                        className={`transition-colors ${
-                          sortBy === "quantity"
-                            ? "text-blue-600"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {getSortIcon("quantity")}
-                      </span>
-                    </button>
-                  </TableColumn>
-
-                  {/* Price - Always Visible */}
-                  <TableColumn className="text-center lg:text-right lg:w-auto w-[32%]">
-                    <button
-                      onClick={() => handleSort("price")}
-                      className="flex items-center gap-1 lg:gap-2 justify-center lg:justify-end w-full font-semibold text-gray-800 hover:text-blue-600 hover:bg-blue-50 px-0 lg:px-2 py-1 rounded transition-all duration-200 cursor-pointer"
-                    >
-                      តម្លៃ
-                      <span
-                        className={`transition-colors ${
-                          sortBy === "price" ? "text-blue-600" : "text-gray-400"
-                        }`}
-                      >
-                        {getSortIcon("price")}
-                      </span>
-                    </button>
-                  </TableColumn>
-
-                  {/* Amount - Desktop Only */}
-                  <TableColumn className="hidden lg:table-cell text-right">
-                    <button
-                      onClick={() => handleSort("amount")}
-                      className="flex items-center gap-2 justify-end w-full font-semibold text-gray-800 hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-all duration-200 cursor-pointer"
-                    >
-                      សរុប
-                      <span
-                        className={`transition-colors ${
-                          sortBy === "amount"
-                            ? "text-blue-600"
-                            : "text-gray-400"
-                        }`}
-                      >
-                        {getSortIcon("amount")}
-                      </span>
-                    </button>
-                  </TableColumn>
-
-                  {/* Actions - Always Visible */}
-                  <TableColumn className="text-center lg:w-auto w-[19%]">
-                    <span className="font-semibold text-gray-800">
-                      សកម្មភាព
-                    </span>
-                  </TableColumn>
-                </TableHeader>
-                <TableBody>
-                  {paginatedData.map((product) => (
-                    <TableRow key={product.id}>
-                      {/* Category - Desktop Only */}
-                      <TableCell className="hidden lg:table-cell">
-                        <Chip
-                          size="md"
-                          variant="flat"
-                          className="font-medium"
-                          color={
-                            product.type === "សាច់"
-                              ? "danger"
-                              : product.type === "បន្លែ"
-                              ? "success"
-                              : product.type === "ផ្លែឈើ"
-                              ? "warning"
-                              : product.type === "គ្រឿងសមុទ្រ"
-                              ? "primary"
-                              : product.type === "ប្រចាំថ្ងៃ"
-                              ? "secondary"
-                              : "default"
-                          }
-                          startContent={
-                            <span className="text-xs">
-                              {
-                                filters.find((f) => f.name === product.type)
-                                  ?.icon
-                              }
-                            </span>
-                          }
-                        >
-                          {product.type}
-                        </Chip>
-                      </TableCell>
-
-                      {/* Product Name - Responsive */}
-                      <TableCell className="px-2 lg:px-4">
-                        {/* Mobile Layout */}
-                        <div className="lg:hidden flex items-center gap-1.5">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 flex items-center justify-center text-xs font-semibold">
-                            {product.name.charAt(0)}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-900 text-xs leading-tight">
-                              {product.name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {product.type}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Desktop Layout */}
-                        <div className="hidden lg:block">
-                          <User
-                            name={
-                              <span className="font-medium text-gray-900 text-sm">
-                                {product.name}
+                    </TableColumn>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedData.map((product) => (
+                      <TableRow key={product.id}>
+                        {/* Category - Desktop Only */}
+                        <TableCell className="hidden lg:table-cell">
+                          <Chip
+                            size="md"
+                            variant="flat"
+                            className="font-medium"
+                            color={
+                              product.type === "សាច់"
+                                ? "danger"
+                                : product.type === "បន្លែ"
+                                ? "success"
+                                : product.type === "ផ្លែឈើ"
+                                ? "warning"
+                                : product.type === "គ្រឿងសមុទ្រ"
+                                ? "primary"
+                                : product.type === "ប្រចាំថ្ងៃ"
+                                ? "secondary"
+                                : "default"
+                            }
+                            startContent={
+                              <span className="text-xs">
+                                {
+                                  filters.find((f) => f.name === product.type)
+                                    ?.icon
+                                }
                               </span>
                             }
-                            description={
-                              <span className="text-gray-600 text-xs">ផលិតផល</span>
-                            }
-                            avatarProps={{
-                              size: "sm",
-                              className:
-                                "bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600",
-                              name: product.name.charAt(0),
-                              showFallback: true,
-                            }}
-                          />
-                        </div>
-                      </TableCell>
+                          >
+                            {product.type}
+                          </Chip>
+                        </TableCell>
 
-                      {/* Date - Desktop Only */}
-                      <TableCell className="hidden lg:table-cell">
-                        <div className="flex items-center gap-2 text-gray-700">
-                          <Icons.Calendar />
-                          {product.dueDate || 'N/A'}
-                        </div>
-                      </TableCell>
+                        {/* Product Name - Responsive */}
+                        <TableCell className="px-2 lg:px-4">
+                          {/* Mobile Layout */}
+                          <div className="lg:hidden flex items-center gap-1.5">
+                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600 flex items-center justify-center text-xs font-semibold">
+                              {product.name.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900 text-xs leading-tight">
+                                {product.name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {product.type}
+                              </div>
+                            </div>
+                          </div>
 
-                      {/* Quantity - Always Visible */}
-                      <TableCell className="text-center px-1">
-                        <Chip
-                          size="sm"
-                          color="default"
-                          variant="bordered"
-                          className="font-medium min-w-6 px-1 text-xs"
-                        >
-                          {product.quantity}
-                        </Chip>
-                      </TableCell>
+                          {/* Desktop Layout */}
+                          <div className="hidden lg:block">
+                            <User
+                              name={
+                                <span className="font-medium text-gray-900 text-sm">
+                                  {product.name}
+                                </span>
+                              }
+                              description={
+                                <span className="text-gray-600 text-xs">
+                                  ផលិតផល
+                                </span>
+                              }
+                              avatarProps={{
+                                size: "sm",
+                                className:
+                                  "bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600",
+                                name: product.name.charAt(0),
+                                showFallback: true,
+                              }}
+                            />
+                          </div>
+                        </TableCell>
 
-                      {/* Price - Always Visible */}
-                      <TableCell className="text-center lg:text-right px-1 lg:px-4">
-                        <span className="font-medium text-gray-900 text-xs">
-                          {formatCurrency(product.price)}
-                        </span>
-                      </TableCell>
+                        {/* Date - Desktop Only */}
+                        <TableCell className="hidden lg:table-cell">
+                          <div className="flex items-center gap-2 text-gray-700">
+                            <Icons.Calendar />
+                            {product.dueDate || "N/A"}
+                          </div>
+                        </TableCell>
 
-                      {/* Amount - Desktop Only */}
-                      <TableCell className="hidden lg:table-cell text-right">
-                        <span className="font-semibold text-sm text-emerald-600">
-                          {formatCurrency(product.amount)}
-                        </span>
-                      </TableCell>
+                        {/* Quantity - Always Visible */}
+                        <TableCell className="text-center px-1">
+                          <Chip
+                            size="sm"
+                            color="default"
+                            variant="bordered"
+                            className="font-medium min-w-6 px-1 text-xs"
+                          >
+                            {product.quantity}
+                          </Chip>
+                        </TableCell>
 
-                      {/* Actions - Always Visible */}
-                      <TableCell className="text-center px-1 lg:px-4">
-                        <div className="flex items-center justify-center gap-0.5">
-                          <Tooltip content="កែប្រែ" size="sm">
-                            <Button
-                              isIconOnly
-                              size="sm"
-                              color="primary"
-                              variant="flat"
-                              onPress={() => handleEditProduct(product)}
-                              className="transition-all duration-200 hover:scale-105 min-w-6 h-6 lg:min-w-7 lg:h-7"
-                            >
-                              <Icons.Edit />
-                            </Button>
-                          </Tooltip>
-                          <Tooltip content="លុប" color="danger" size="sm">
-                            <Button
-                              isIconOnly
-                              size="sm"
-                              color="danger"
-                              variant="flat"
-                              onPress={() => handleDeleteProduct(product)}
-                              className="transition-all duration-200 hover:scale-105 min-w-6 h-6 lg:min-w-7 lg:h-7"
-                            >
-                              <Icons.Delete />
-                            </Button>
-                          </Tooltip>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                        {/* Price - Always Visible */}
+                        <TableCell className="text-center lg:text-right px-1 lg:px-4">
+                          <span className="font-medium text-gray-900 text-xs">
+                            {formatCurrency(product.price)}
+                          </span>
+                        </TableCell>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex flex-col items-center justify-center p-3 sm:p-4 border-t border-gray-200 gap-3">
-                  <div className="text-xs sm:text-sm text-gray-600 text-center">
-                    បង្ហាញ {(currentPage - 1) * itemsPerPage + 1} ដល់{" "}
-                    {Math.min(currentPage * itemsPerPage, totalProducts)} នៃ{" "}
-                    {totalProducts} ទំនិញ
+                        {/* Amount - Desktop Only */}
+                        <TableCell className="hidden lg:table-cell text-right">
+                          <span className="font-semibold text-sm text-emerald-600">
+                            {formatCurrency(product.amount)}
+                          </span>
+                        </TableCell>
+
+                        {/* Actions - Always Visible */}
+                        <TableCell className="text-center px-1 lg:px-4">
+                          <div className="flex items-center justify-center gap-0.5">
+                            <Tooltip content="កែប្រែ" size="sm">
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                color="primary"
+                                variant="flat"
+                                onPress={() => handleEditProduct(product)}
+                                className="transition-all duration-200 hover:scale-105 min-w-6 h-6 lg:min-w-7 lg:h-7"
+                              >
+                                <Icons.Edit />
+                              </Button>
+                            </Tooltip>
+                            <Tooltip content="លុប" color="danger" size="sm">
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                color="danger"
+                                variant="flat"
+                                onPress={() => handleDeleteProduct(product)}
+                                className="transition-all duration-200 hover:scale-105 min-w-6 h-6 lg:min-w-7 lg:h-7"
+                              >
+                                <Icons.Delete />
+                              </Button>
+                            </Tooltip>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col items-center justify-center p-3 sm:p-4 border-t border-gray-200 gap-3">
+                    <div className="text-xs sm:text-sm text-gray-600 text-center">
+                      បង្ហាញ {(currentPage - 1) * itemsPerPage + 1} ដល់{" "}
+                      {Math.min(currentPage * itemsPerPage, totalProducts)} នៃ{" "}
+                      {totalProducts} ទំនិញ
+                    </div>
+                    <Pagination
+                      total={totalPages}
+                      page={currentPage}
+                      onChange={setCurrentPage}
+                      color="primary"
+                      size="sm"
+                      showControls
+                      className="gap-1"
+                    />
                   </div>
-                  <Pagination
-                    total={totalPages}
-                    page={currentPage}
-                    onChange={setCurrentPage}
-                    color="primary"
-                    size="sm"
-                    showControls
-                    className="gap-1"
-                  />
-                </div>
-              )}
+                )}
 
-              {totalProducts === 0 && (
-                <div className="p-8 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Icons.Package />
+                {totalProducts === 0 && (
+                  <div className="p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                      <Icons.Package />
+                    </div>
+                    <h3 className="text-base font-medium text-gray-600 mb-2">
+                      រកមិនឃើញទំនិញ
+                    </h3>
+                    <p className="text-gray-500 mb-4 text-sm">
+                      គ្មានទំនិញដែលត្រូវនឹងការស្វែងរករបស់អ្នក
+                    </p>
+                    <Button
+                      color="primary"
+                      variant="flat"
+                      size="sm"
+                      onPress={clearAllFilters}
+                      startContent={<Icons.Clear />}
+                      className="text-sm"
+                    >
+                      សម្អាតការត្រង
+                    </Button>
                   </div>
-                  <h3 className="text-base font-medium text-gray-600 mb-2">
-                    រកមិនឃើញទំនិញ
-                  </h3>
-                  <p className="text-gray-500 mb-4 text-sm">
-                    គ្មានទំនិញដែលត្រូវនឹងការស្វែងរករបស់អ្នក
-                  </p>
-                  <Button
-                    color="primary"
-                    variant="flat"
-                    size="sm"
-                    onPress={clearAllFilters}
-                    startContent={<Icons.Clear />}
-                    className="text-sm"
-                  >
-                    សម្អាតការត្រង
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             )}
           </CardBody>
         </Card>
 
-        {/* Enhanced Add/Edit Product Modal - Consistent Size for Both Modes */}
+        {/* Create Product Modal */}
         <Modal
-          isOpen={showAddForm}
-          onOpenChange={setShowAddForm}
-          placement="center"
-          size="md"
-          scrollBehavior="inside"
+          isOpen={showCreateForm}
+          onOpenChange={setShowCreateForm}
+          placement="top-center"
+          size="2xl"
+          scrollBehavior="normal"
           backdrop="blur"
           isDismissable={true}
           isKeyboardDismissDisabled={false}
           hideCloseButton={false}
           classNames={{
-            backdrop: "bg-black/60",
-            base: "border-none shadow-2xl rounded-xl w-[90vw] h-auto max-w-[90vw] max-h-[75vh] mx-4 my-auto md:w-[500px] md:h-auto md:max-w-[500px] md:max-h-[75vh]",
-            header: "border-b border-gray-200 rounded-t-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-3 flex-shrink-0",
-            body: "py-3 px-3 flex-shrink-0",
-            footer: "border-t border-gray-200 bg-gray-50 p-3 flex-shrink-0 rounded-b-xl",
+            backdrop: "bg-black/50",
+            base: "border-none shadow-2xl mx-2 my-4 rounded-2xl w-[90vw] max-w-[500px] md:max-w-[600px] max-h-[85vh]",
+            header:
+              "border-b border-gray-200 rounded-t-2xl bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 flex-shrink-0",
+            body: "px-4 py-4 flex-1 overflow-y-auto",
+            footer:
+              "border-t border-gray-200 bg-gray-50 px-4 py-3 flex-shrink-0 rounded-b-2xl",
           }}
         >
           <ModalContent>
             {(onClose) => (
               <>
                 <ModalHeader className="flex-shrink-0">
-                  <div className="flex items-center gap-3 [@media(width:428px)]:gap-2">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white [@media(width:428px)]:p-1.5 flex-shrink-0">
-                      <Icons.Package />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-base font-bold text-gray-900 truncate">
-                        {editingProduct ? "កែប្រែទំនិញ" : "បន្ថែមទំនិញថ្មី"}
-                      </h2>
-                      <p className="text-gray-600 text-sm truncate">
-                        {editingProduct
-                          ? "កែប្រែព័ត៌មានទំនិញរបស់អ្នក"
-                          : "បំពេញព័ត៌មានទំនិញថ្មីរបស់អ្នក"}
-                      </p>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex-shrink-0 shadow-md">
+                        <Icons.Package />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold text-gray-900 truncate">
+                          បន្ថែមទំនិញថ្មី
+                        </h2>
+                      </div>
                     </div>
                   </div>
                 </ModalHeader>
 
                 <ModalBody>
-                  <form 
+                  <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      handleAddProduct();
-                    }} 
-                    className="space-y-2"
+                      handleCreateProduct();
+                    }}
+                    className="space-y-6 sm:space-y-4"
                   >
-                    <div className="grid grid-cols-1 gap-2">
-                        {/* Type Selection */}
+                    <div className="grid grid-cols-1 gap-6 sm:gap-4">
+                      {/* Type Selection */}
+                      <div className="w-full space-y-1">
                         <Select
                           label="ប្រភេទទំនិញ"
-                          placeholder="ជ្រើសរើសប្រភេទ"
-                          selectedKeys={formData.type ? [formData.type] : []}
+                          placeholder="ជ្រើសរើសប្រភេទទំនិញ"
+                          selectedKeys={
+                            createFormData.type ? [createFormData.type] : []
+                          }
                           onSelectionChange={(keys) => {
                             const selectedValue = Array.from(keys)[0];
-                            handleFormChange("type", selectedValue);
+                            handleCreateFormChange("type", selectedValue);
                           }}
                           isRequired={true}
                           variant="bordered"
-                          size="sm"
+                          size="md"
+                          radius="md"
                           classNames={{
-                            trigger: "bg-white shadow-sm h-10 rounded-xl",
-                            label: "text-xs",
-                            value: "text-xs",
-                            listbox: "text-xs",
-                            popoverContent: "text-xs",
+                            base: "w-full",
+                            trigger:
+                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md data-[focus=true]:border-blue-500 data-[focus=true]:shadow-md data-[open=true]:border-blue-500 data-[open=true]:shadow-md",
+                            label:
+                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                            value:
+                              "text-xs sm:text-sm font-medium text-gray-900",
+                            listbox: "rounded-lg text-xs sm:text-sm",
+                            popoverContent:
+                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                            listboxWrapper: "rounded-lg",
                           }}
                         >
                           {productTypes.map((type) => (
@@ -1314,266 +1278,662 @@ export default function Home() {
                               key={type}
                               value={type}
                               startContent={
-                                <span className="text-xs">
+                                <span className="text-xs sm:text-sm mr-1">
                                   {filters.find((f) => f.name === type)?.icon}
                                 </span>
                               }
-                              className="text-xs"
+                              classNames={{
+                                base: "rounded-lg my-0.5 data-[hover=true]:bg-blue-50 data-[selectable=true]:focus:bg-blue-100 data-[pressed=true]:opacity-70",
+                                title:
+                                  "text-xs sm:text-sm font-medium text-gray-900",
+                              }}
                             >
                               {type}
                             </SelectItem>
                           ))}
                         </Select>
+                      </div>
 
-                        {/* Product Name */}
+                      {/* Product Name */}
+                      <div className="w-full space-y-1">
                         <Input
                           label="ឈ្មោះទំនិញ"
-                          placeholder="បញ្ចូលឈ្មោះទំនិញ"
-                          value={formData.name}
+                          placeholder="បញ្ចូលឈ្មោះទំនិញរបស់អ្នក"
+                          value={createFormData.name}
                           onValueChange={(value) =>
-                            handleFormChange("name", value)
+                            handleCreateFormChange("name", value)
                           }
                           isRequired
                           variant="bordered"
-                          size="sm"
+                          size="md"
+                          radius="md"
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm h-10 rounded-xl",
-                            label: "text-xs",
-                            input: "text-xs placeholder:text-xs",
-                          }}
-                        />
-
-                        {/* Due Date */}
-                        <DatePicker
-                          label="កាលបរិច្ឆេទ"
-                          value={formData.dueDate}
-                          onChange={(date) => handleFormChange("dueDate", date)}
-                          isRequired
-                          variant="bordered"
-                          size="sm"
-                          showMonthAndYearPickers
-                          inert={false}
-                          classNames={{
-                            base: "bg-white",
-                            inputWrapper: "bg-white shadow-sm border-gray-300 focus-within:border-blue-500 h-10 rounded-xl",
-                            label: "text-xs",
-                            input: "text-xs",
-                            popoverContent: "text-xs",
-                          }}
-                        />
-
-                        {/* Quantity */}
-                        <Input
-                          type="number"
-                          label="បរិមាណ"
-                          placeholder="បញ្ចូលបរិមាណ"
-                          value={formData.quantity === 0 || formData.quantity === "" ? "" : formData.quantity?.toString()}
-                          onValueChange={(value) => {
-                            handleFormChange("quantity", value === "" ? "" : value);
-                          }}
-                          onFocus={() => {
-                            if (formData.quantity === 0 || formData.quantity === 1) {
-                              handleFormChange("quantity", "");
-                          }
-                          }}
-                          min="1"
-                          isRequired
-                          variant="bordered"
-                          size="sm"
-                          classNames={{
-                            inputWrapper: "bg-white shadow-sm h-10 rounded-xl",
-                            label: "text-xs",
-                            input: "text-xs placeholder:text-xs",
-                          }}
-                        />
-
-                        {/* Price */}
-                        <Input
-                          type="number"
-                          label="តម្លៃ"
-                          placeholder="បញ្ចូលតម្លៃ"
-                          value={formData.price === 0 || formData.price === "" ? "" : formData.price?.toString()}
-                          onValueChange={(value) => {
-                            handleFormChange("price", value === "" ? "" : value);
-                          }}
-                          onFocus={() => {
-                            if (formData.price === 0) {
-                              handleFormChange("price", "");
-                          }
-                          }}
-                          min="0"
-                          step="0.01"
-                          isRequired
-                          variant="bordered"
-                          size="sm"
-                          endContent={
-                            <span className="text-gray-600 font-medium text-xs">៛</span>
-                          }
-                          classNames={{
-                            inputWrapper: "bg-white shadow-sm h-10 rounded-xl",
-                            label: "text-xs",
-                            input: "text-xs placeholder:text-xs",
+                            base: "w-full",
+                            inputWrapper:
+                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                            label:
+                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                            input:
+                              "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
                           }}
                         />
                       </div>
-                    </form>
-                  </ModalBody>
 
-                  <ModalFooter>
+                      {/* Due Date */}
+                      <div className="w-full space-y-1">
+                        <DatePicker
+                          label="កាលបរិច្ឆេទ"
+                          value={createFormData.dueDate}
+                          onChange={(date) =>
+                            handleCreateFormChange("dueDate", date)
+                          }
+                          isRequired
+                          variant="bordered"
+                          size="md"
+                          radius="md"
+                          showMonthAndYearPickers
+                          inert={false}
+                          classNames={{
+                            base: "w-full",
+                            inputWrapper:
+                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                            label:
+                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                            input:
+                              "text-xs sm:text-sm font-medium text-gray-900",
+                            popoverContent:
+                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                          }}
+                        />
+                      </div>
+
+                      {/* Quantity and Price Row */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Quantity */}
+                        <div className="w-full space-y-1">
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            label="បរិមាណ"
+                            placeholder="ចំនួន"
+                            value={
+                              createFormData.quantity === 0 ||
+                              createFormData.quantity === ""
+                                ? ""
+                                : createFormData.quantity?.toString()
+                            }
+                            onValueChange={(value) => {
+                              handleCreateFormChange(
+                                "quantity",
+                                value === "" ? "" : value
+                              );
+                            }}
+                            onFocus={() => {
+                              if (
+                                createFormData.quantity === 0 ||
+                                createFormData.quantity === 1
+                              ) {
+                                handleCreateFormChange("quantity", "");
+                              }
+                            }}
+                            isRequired
+                            variant="bordered"
+                            size="md"
+                            radius="md"
+                            classNames={{
+                              base: "w-full",
+                              inputWrapper:
+                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                              label:
+                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                              input:
+                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                            }}
+                          />
+                        </div>
+
+                        {/* Price */}
+                        <div className="w-full space-y-1">
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            label="តម្លៃ"
+                            placeholder="តម្លៃ"
+                            value={
+                              createFormData.price === 0 ||
+                              createFormData.price === ""
+                                ? ""
+                                : createFormData.price?.toString()
+                            }
+                            onValueChange={(value) => {
+                              handleCreateFormChange(
+                                "price",
+                                value === "" ? "" : value
+                              );
+                            }}
+                            onFocus={() => {
+                              if (createFormData.price === 0) {
+                                handleCreateFormChange("price", "");
+                              }
+                            }}
+                            isRequired
+                            variant="bordered"
+                            size="md"
+                            radius="md"
+                            endContent={
+                              <div className="flex items-center">
+                                <span className="text-gray-600 font-medium text-xs sm:text-sm bg-gray-100 px-2 py-0.5 rounded-md">
+                                  ៛
+                                </span>
+                              </div>
+                            }
+                            classNames={{
+                              base: "w-full",
+                              inputWrapper:
+                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                              label:
+                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                              input:
+                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Amount Display */}
+                      {createFormData.amount > 0 && (
+                        <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-emerald-700">
+                              សរុបទាំងអស់
+                            </span>
+                            <span className="text-sm sm:text-lg font-bold text-emerald-600">
+                              {formatCurrency(createFormData.amount)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </form>
+                </ModalBody>
+
+                <ModalFooter>
+                  <div className="flex gap-3 w-full">
                     <Button
                       color="danger"
                       variant="light"
                       onPress={onClose}
-                      size="sm"
-                      className="text-sm h-9 min-w-[80px] rounded-xl"
+                      size="md"
+                      radius="md"
+                      className="flex-1 text-sm font-medium h-12 sm:h-10 min-w-0 hover:bg-red-50"
                     >
                       បោះបង់
                     </Button>
-                    <Button 
-                      color="primary" 
-                      size="sm"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold text-sm h-9 min-w-[100px] rounded-xl"
+                    <Button
+                      color="primary"
+                      size="md"
+                      radius="md"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold text-sm h-12 sm:h-10 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
                       onPress={() => {
                         try {
-                          handleAddProduct();
+                          handleCreateProduct();
                         } catch (error) {
                           console.error("Submit error:", error);
                         }
                       }}
                       isDisabled={
                         actionLoading ||
-                        !formData.name ||
-                        !formData.dueDate ||
-                        !formData.quantity || 
-                        formData.quantity === "" || 
-                        Number(formData.quantity) <= 0 ||
-                        !formData.price || 
-                        formData.price === "" || 
-                        Number(formData.price) <= 0
+                        !createFormData.name ||
+                        !createFormData.dueDate ||
+                        !createFormData.quantity ||
+                        createFormData.quantity === "" ||
+                        Number(createFormData.quantity) <= 0 ||
+                        !createFormData.price ||
+                        createFormData.price === "" ||
+                        Number(createFormData.price) <= 0
                       }
                       isLoading={actionLoading}
                     >
                       <span className="truncate">
-                        {actionLoading 
-                          ? (editingProduct ? "កំពុងរក្សាទុក..." : "កំពុងបន្ថែម...") 
-                          : (editingProduct ? "រក្សាទុកការកែប្រែ" : "បន្ថែមទំនិញ")
-                        }
+                        {actionLoading ? "កំពុងបន្ថែម..." : "បន្ថែមទំនិញ"}
                       </span>
                     </Button>
-                  </ModalFooter>
-                </>
-              )}
-            </ModalContent>
-          </Modal>
+                  </div>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
 
-          {/* Minimal Delete Confirmation Modal */}
-          <Modal
-            isOpen={showDeleteConfirm}
-            onOpenChange={setShowDeleteConfirm}
-            placement="center"
-            backdrop="blur"
-            isDismissable={true}
-            isKeyboardDismissDisabled={false}
-            hideCloseButton={true}
-            classNames={{
-              backdrop: "bg-black/30",
-              base: "border-none shadow-xl rounded-3xl w-[85vw] max-w-[350px] mx-4 my-auto bg-white",
-              header: "p-0",
-              body: "p-0",
-              footer: "p-0",
-            }}
-          >
-            <ModalContent>
-              {(onClose) => (
-                <>
-                  <ModalBody>
-                    <div className="p-6">
-                      {/* Header with close button */}
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900">
-                            លុបទំនិញ?
-                          </h3>
-                          <p className="text-gray-500 text-sm mt-1">
-                            មិនអាចត្រឡប់វិញបាន
-                          </p>
-                        </div>
-                        <button
-                          onClick={onClose}
-                          className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+        {/* Edit Product Modal */}
+        <Modal
+          isOpen={showEditForm}
+          onOpenChange={setShowEditForm}
+          placement="top-center"
+          size="2xl"
+          scrollBehavior="normal"
+          backdrop="blur"
+          isDismissable={true}
+          isKeyboardDismissDisabled={false}
+          hideCloseButton={false}
+          classNames={{
+            backdrop: "bg-black/50",
+            base: "border-none shadow-2xl mx-2 my-4 rounded-2xl w-[90vw] max-w-[500px] md:max-w-[600px] max-h-[85vh]",
+            header:
+              "border-b border-gray-200 rounded-t-2xl bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 flex-shrink-0",
+            body: "px-4 py-4 flex-1 overflow-y-auto",
+            footer:
+              "border-t border-gray-200 bg-gray-50 px-4 py-3 flex-shrink-0 rounded-b-2xl",
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex-shrink-0">
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 text-white flex-shrink-0 shadow-md">
+                        <Icons.Edit />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold text-gray-900 truncate">
+                          កែប្រែទំនិញ
+                        </h2>
+                      </div>
+                    </div>
+                  </div>
+                </ModalHeader>
+
+                <ModalBody>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleUpdateProduct();
+                    }}
+                    className="space-y-6 sm:space-y-4"
+                  >
+                    <div className="grid grid-cols-1 gap-6 sm:gap-4">
+                      {/* Type Selection */}
+                      <div className="w-full space-y-1">
+                        <Select
+                          label="ប្រភេទទំនិញ"
+                          placeholder="ជ្រើសរើសប្រភេទទំនិញ"
+                          selectedKeys={
+                            editFormData.type ? [editFormData.type] : []
+                          }
+                          onSelectionChange={(keys) => {
+                            const selectedValue = Array.from(keys)[0];
+                            handleEditFormChange("type", selectedValue);
+                          }}
+                          isRequired={true}
+                          variant="bordered"
+                          size="md"
+                          radius="md"
+                          classNames={{
+                            base: "w-full",
+                            trigger:
+                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md data-[focus=true]:border-amber-500 data-[focus=true]:shadow-md data-[open=true]:border-amber-500 data-[open=true]:shadow-md",
+                            label:
+                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                            value:
+                              "text-xs sm:text-sm font-medium text-gray-900",
+                            listbox: "rounded-lg text-xs sm:text-sm",
+                            popoverContent:
+                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                            listboxWrapper: "rounded-lg",
+                          }}
                         >
-                          <svg
-                            className="w-5 h-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
+                          {productTypes.map((type) => (
+                            <SelectItem
+                              key={type}
+                              value={type}
+                              startContent={
+                                <span className="text-xs sm:text-sm mr-1">
+                                  {filters.find((f) => f.name === type)?.icon}
+                                </span>
+                              }
+                              classNames={{
+                                base: "rounded-lg my-0.5 data-[hover=true]:bg-amber-50 data-[selectable=true]:focus:bg-amber-100 data-[pressed=true]:opacity-70",
+                                title:
+                                  "text-xs sm:text-sm font-medium text-gray-900",
+                              }}
+                            >
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </Select>
                       </div>
 
-                      {/* Product Card */}
-                      {productToDelete && (
-                        <div className="bg-gray-50 rounded-2xl p-4 mb-6">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
-                              <span className="text-blue-600 font-semibold text-sm">
-                                {productToDelete.name.charAt(0)}
-                              </span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate">
-                                {productToDelete.name}
-                              </p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs text-gray-500">
-                                  {productToDelete.type}
-                                </span>
-                                <span className="text-xs text-gray-300">•</span>
-                                <span className="text-xs font-medium text-emerald-600">
-                                  {formatCurrency(productToDelete.amount)}
+                      {/* Product Name */}
+                      <div className="w-full space-y-1">
+                        <Input
+                          label="ឈ្មោះទំនិញ"
+                          placeholder="បញ្ចូលឈ្មោះទំនិញរបស់អ្នក"
+                          value={editFormData.name}
+                          onValueChange={(value) =>
+                            handleEditFormChange("name", value)
+                          }
+                          isRequired
+                          variant="bordered"
+                          size="md"
+                          radius="md"
+                          classNames={{
+                            base: "w-full",
+                            inputWrapper:
+                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                            label:
+                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                            input:
+                              "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                          }}
+                        />
+                      </div>
+
+                      {/* Due Date */}
+                      <div className="w-full space-y-1">
+                        <DatePicker
+                          label="កាលបរិច្ឆេទ"
+                          value={editFormData.dueDate}
+                          onChange={(date) =>
+                            handleEditFormChange("dueDate", date)
+                          }
+                          isRequired
+                          variant="bordered"
+                          size="md"
+                          radius="md"
+                          showMonthAndYearPickers
+                          inert={false}
+                          classNames={{
+                            base: "w-full",
+                            inputWrapper:
+                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                            label:
+                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                            input:
+                              "text-xs sm:text-sm font-medium text-gray-900",
+                            popoverContent:
+                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                          }}
+                        />
+                      </div>
+
+                      {/* Quantity and Price Row */}
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Quantity */}
+                        <div className="w-full space-y-1">
+                          <Input
+                            type="text"
+                            inputMode="numeric"
+                            label="បរិមាណ"
+                            placeholder="ចំនួន"
+                            value={
+                              editFormData.quantity === 0 ||
+                              editFormData.quantity === ""
+                                ? ""
+                                : editFormData.quantity?.toString()
+                            }
+                            onValueChange={(value) => {
+                              handleEditFormChange(
+                                "quantity",
+                                value === "" ? "" : value
+                              );
+                            }}
+                            onFocus={() => {
+                              if (
+                                editFormData.quantity === 0 ||
+                                editFormData.quantity === 1
+                              ) {
+                                handleEditFormChange("quantity", "");
+                              }
+                            }}
+                            isRequired
+                            variant="bordered"
+                            size="md"
+                            radius="md"
+                            classNames={{
+                              base: "w-full",
+                              inputWrapper:
+                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                              label:
+                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                              input:
+                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                            }}
+                          />
+                        </div>
+
+                        {/* Price */}
+                        <div className="w-full space-y-1">
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            label="តម្លៃ"
+                            placeholder="តម្លៃ"
+                            value={
+                              editFormData.price === 0 ||
+                              editFormData.price === ""
+                                ? ""
+                                : editFormData.price?.toString()
+                            }
+                            onValueChange={(value) => {
+                              handleEditFormChange(
+                                "price",
+                                value === "" ? "" : value
+                              );
+                            }}
+                            onFocus={() => {
+                              if (editFormData.price === 0) {
+                                handleEditFormChange("price", "");
+                              }
+                            }}
+                            isRequired
+                            variant="bordered"
+                            size="md"
+                            radius="md"
+                            endContent={
+                              <div className="flex items-center">
+                                <span className="text-gray-600 font-medium text-xs sm:text-sm bg-gray-100 px-2 py-0.5 rounded-md">
+                                  ៛
                                 </span>
                               </div>
-                            </div>
+                            }
+                            classNames={{
+                              base: "w-full",
+                              inputWrapper:
+                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                              label:
+                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                              input:
+                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Amount Display */}
+                      {editFormData.amount > 0 && (
+                        <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-emerald-700">
+                              សរុបទាំងអស់
+                            </span>
+                            <span className="text-sm sm:text-lg font-bold text-emerald-600">
+                              {formatCurrency(editFormData.amount)}
+                            </span>
                           </div>
                         </div>
                       )}
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
-                        <Button
-                          variant="flat"
-                          onPress={onClose}
-                          className="flex-1 bg-gray-100 text-gray-700 rounded-2xl h-12 font-medium hover:bg-gray-200"
-                        >
-                          បោះបង់
-                        </Button>
-                        <Button
-                          color="danger"
-                          onPress={confirmDelete}
-                          className="flex-1 bg-red-500 text-white rounded-2xl h-12 font-medium hover:bg-red-600"
-                          isDisabled={actionLoading}
-                          isLoading={actionLoading}
-                        >
-                          {actionLoading ? "កំពុងលុប..." : "លុប"}
-                        </Button>
-                      </div>
                     </div>
-                  </ModalBody>
-                </>
-              )}
-            </ModalContent>
-          </Modal>
+                  </form>
+                </ModalBody>
 
-          {/* PWA Install Prompt */}
-          <PWAInstallPrompt />
-        </div>
+                <ModalFooter>
+                  <div className="flex gap-3 w-full">
+                    <Button
+                      color="danger"
+                      variant="light"
+                      onPress={onClose}
+                      size="md"
+                      radius="md"
+                      className="flex-1 text-sm font-medium h-12 sm:h-10 min-w-0 hover:bg-red-50"
+                    >
+                      បោះបង់
+                    </Button>
+                    <Button
+                      color="warning"
+                      size="md"
+                      radius="md"
+                      className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 font-semibold text-sm h-12 sm:h-10 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
+                      onPress={() => {
+                        try {
+                          handleUpdateProduct();
+                        } catch (error) {
+                          console.error("Submit error:", error);
+                        }
+                      }}
+                      isDisabled={
+                        actionLoading ||
+                        !editFormData.name ||
+                        !editFormData.dueDate ||
+                        !editFormData.quantity ||
+                        editFormData.quantity === "" ||
+                        Number(editFormData.quantity) <= 0 ||
+                        !editFormData.price ||
+                        editFormData.price === "" ||
+                        Number(editFormData.price) <= 0
+                      }
+                      isLoading={actionLoading}
+                    >
+                      <span className="truncate">
+                        {actionLoading
+                          ? "កំពុងរក្សាទុក..."
+                          : "រក្សាទុកការកែប្រែ"}
+                      </span>
+                    </Button>
+                  </div>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* Minimal Delete Confirmation Modal */}
+        <Modal
+          isOpen={showDeleteConfirm}
+          onOpenChange={setShowDeleteConfirm}
+          placement="top-center"
+          size="sm"
+          scrollBehavior="normal"
+          backdrop="blur"
+          isDismissable={true}
+          isKeyboardDismissDisabled={false}
+          hideCloseButton={true}
+          classNames={{
+            backdrop: "bg-black/50",
+            base: "border-none shadow-2xl mx-2 my-4 rounded-2xl w-[90vw] max-w-[400px] max-h-[85vh] bg-white",
+            header: "p-0",
+            body: "p-0",
+            footer: "p-0",
+          }}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalBody>
+                  <div className="p-4 sm:p-6">
+                    {/* Header with close button */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">
+                          លុបទំនិញ?
+                        </h3>
+                        <p className="text-gray-500 text-xs sm:text-sm mt-1">
+                          មិនអាចត្រឡប់វិញបាន
+                        </p>
+                      </div>
+                      <button
+                        onClick={onClose}
+                        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      >
+                        <svg
+                          className="w-5 h-5 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Product Card */}
+                    {productToDelete && (
+                      <div className="bg-gray-50 rounded-2xl p-4 mb-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 font-semibold text-xs sm:text-sm">
+                              {productToDelete.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 text-xs sm:text-sm truncate">
+                              {productToDelete.name}
+                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs sm:text-sm text-gray-500">
+                                {productToDelete.type}
+                              </span>
+                              <span className="text-xs sm:text-sm text-gray-300">•</span>
+                              <span className="text-xs sm:text-sm font-medium text-emerald-600">
+                                {formatCurrency(productToDelete.amount)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-3 w-full">
+                      <Button
+                        color="danger"
+                        variant="light"
+                        onPress={onClose}
+                        size="md"
+                        radius="md"
+                        className="flex-1 text-sm font-medium h-12 sm:h-10 min-w-0 hover:bg-red-50"
+                      >
+                        បោះបង់
+                      </Button>
+                      <Button
+                        color="danger"
+                        size="md"
+                        radius="md"
+                        className="flex-1 bg-gradient-to-r from-red-500 to-red-600 font-semibold text-sm h-12 sm:h-10 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
+                        onPress={confirmDelete}
+                        isDisabled={actionLoading}
+                        isLoading={actionLoading}
+                      >
+                        <span className="truncate">
+                          {actionLoading ? "កំពុងលុប..." : "លុបទំនិញ"}
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
+                </ModalBody>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
       </div>
-    );
-  }
+    </div>
+  );
+}
