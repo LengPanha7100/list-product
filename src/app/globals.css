@@ -94,3 +94,109 @@ select.no-select-highlight option::selection {
     max-width: 120px;
   }
 }
+
+/* Anti-zoom CSS for mobile devices */
+@media screen and (max-width: 768px) {
+  /* Prevent zoom on all form inputs */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    -webkit-border-radius: 0;
+    border-radius: 0;
+  }
+  
+  /* Prevent zoom on focus */
+  input:focus,
+  select:focus,
+  textarea:focus,
+  button:focus {
+    -webkit-transform: scale(1) !important;
+    transform: scale(1) !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Prevent text size adjustment */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Force 16px font size for NextUI inputs */
+  [data-slot="input"],
+  [data-slot="input"] input,
+  [data-slot="input"] textarea,
+  [data-slot="base"] input,
+  [data-slot="base"] textarea,
+  .nextui-input input,
+  .nextui-select input,
+  .nextui-datepicker input {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Prevent zoom on modal interactions */
+  [role="dialog"] input,
+  [role="dialog"] select,
+  [role="dialog"] textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Disable touch callouts and highlights */
+* {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection for inputs and content areas */
+input,
+textarea,
+[contenteditable],
+.selectable {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* PWA specific styles */
+@media all and (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Fix for iOS Safari input zoom */
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+/* Prevent double-tap zoom */
+button, 
+a, 
+input[type="button"], 
+input[type="submit"], 
+input[type="reset"] {
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling for PWA */
+html {
+  scroll-behavior: smooth;
+}

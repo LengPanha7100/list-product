@@ -1,19 +1,30 @@
 {
-  "name": "tpying",
-  "version": "0.1.0",
+  "name": "product-list-manager-kh",
+  "version": "1.0.0",
   "private": true,
+  "description": "ប្រព័ន្ធគ្រប់គ្រងទំនិញ និងស្តុកទំនិញ - Product Inventory Management System",
+  "keywords": ["pwa", "product", "inventory", "management", "cambodia", "khmer", "nextjs"],
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:pwa": "next build && next export",
+    "serve:pwa": "npx serve out",
+    "db:setup": "node scripts/setup-db.js",
+    "db:studio": "npx prisma studio",
+    "db:reset": "npx prisma db push --force-reset",
+    "pwa:icons": "echo 'Open scripts/generate-pwa-icons.html in your browser to generate icons'"
   },
   "dependencies": {
     "@internationalized/date": "^3.8.2",
     "@nextui-org/react": "^2.2.9",
     "@nextui-org/theme": "^2.1.17",
+    "@prisma/client": "^6.12.0",
     "framer-motion": "^10.16.0",
     "next": "15.3.5",
+    "next-pwa": "^5.6.0",
+    "prisma": "^6.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwindcss": "^3.4.0"

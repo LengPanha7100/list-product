@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   parseDate,
   getLocalTimeZone,
   today,
   CalendarDate,
 } from "@internationalized/date";
+import { productApi, handleApiError } from "../lib/api";
+import PWAInstallPrompt from "../components/PWAInstallPrompt";
 import {
   Button,
   Input,
@@ -354,168 +356,10 @@ const dateUtils = {
 };
 
 export default function Home() {
-  const [invoiceData, setInvoiceData] = useState([
-    {
-      id: 1,
-      type: "សាច់",
-      name: "សាច់គោ",
-      size: "មធ្យម",
-      dueDate: "2024-12-20",
-      quantity: 2,
-      price: 15000,
-      amount: 30000,
-    },
-    {
-      id: 2,
-      type: "សាច់",
-      name: "សាច់ជ្រូក",
-      size: "តូច",
-      dueDate: "2024-12-19",
-      quantity: 3,
-      price: 12000,
-      amount: 36000,
-    },
-    {
-      id: 3,
-      type: "បន្លែ",
-      name: "ស្ពៃ",
-      size: "ធំ",
-      dueDate: "2024-12-21",
-      quantity: 5,
-      price: 2000,
-      amount: 10000,
-    },
-    {
-      id: 4,
-      type: "បន្លែ",
-      name: "ត្រកួន",
-      size: "មធ្យម",
-      dueDate: "2024-12-20",
-      quantity: 4,
-      price: 1500,
-      amount: 6000,
-    },
-    {
-      id: 5,
-      type: "ផ្លែឈើ",
-      name: "ចែក",
-      size: "តូច",
-      dueDate: "2024-12-22",
-      quantity: 10,
-      price: 3000,
-      amount: 30000,
-    },
-    {
-      id: 6,
-      type: "ផ្លែឈើ",
-      name: "ស្វាយ",
-      size: "ធំ",
-      dueDate: "2024-12-18",
-      quantity: 8,
-      price: 4000,
-      amount: 32000,
-    },
-    {
-      id: 7,
-      type: "គ្រឿងសមុទ្រ",
-      name: "ត្រីទូណា",
-      size: "មធ្យម",
-      dueDate: "2024-12-20",
-      quantity: 2,
-      price: 18000,
-      amount: 36000,
-    },
-    {
-      id: 8,
-      type: "គ្រឿងសមុទ្រ",
-      name: "បង្កង",
-      size: "តូច",
-      dueDate: "2024-12-19",
-      quantity: 15,
-      price: 2500,
-      amount: 37500,
-    },
-    {
-      id: 9,
-      type: "ប្រចាំថ្ងៃ",
-      name: "អង្ករ",
-      size: "ធំ",
-      dueDate: "2024-12-25",
-      quantity: 25,
-      price: 3500,
-      amount: 87500,
-    },
-    {
-      id: 10,
-      type: "ប្រចាំថ្ងៃ",
-      name: "ប្រេង",
-      size: "តូច",
-      dueDate: "2024-12-23",
-      quantity: 3,
-      price: 8000,
-      amount: 24000,
-    },
-    {
-      id: 11,
-      type: "ប្រចាំថ្ងៃ",
-      name: "ប្រេង",
-      size: "មធ្យម",
-      dueDate: "2024-12-23",
-      quantity: 3,
-      price: 8000,
-      amount: 24000,
-    },
-    {
-      id: 12,
-      type: "សាច់",
-      name: "សាច់មាន់",
-      size: "ធំ",
-      dueDate: "2024-12-21",
-      quantity: 5,
-      price: 9000,
-      amount: 45000,
-    },
-    {
-      id: 13,
-      type: "បន្លែ",
-      name: "ប្រជាក់",
-      size: "តូច",
-      dueDate: "2024-12-24",
-      quantity: 7,
-      price: 1200,
-      amount: 8400,
-    },
-    {
-      id: 14,
-      type: "ផ្លែឈើ",
-      name: "ល្ហុង",
-      size: "មធ្យម",
-      dueDate: "2024-12-22",
-      quantity: 6,
-      price: 2800,
-      amount: 16800,
-    },
-    {
-      id: 15,
-      type: "គ្រឿងសមុទ្រ",
-      name: "ត្រីអាំងកែរ",
-      size: "ធំ",
-      dueDate: "2024-12-20",
-      quantity: 4,
-      price: 22000,
-      amount: 88000,
-    },
-    {
-      id: 16,
-      type: "ប្រចាំថ្ងៃ",
-      name: "សុីអ៊ីវ",
-      size: "តូច",
-      dueDate: "2024-12-26",
-      quantity: 2,
-      price: 5500,
-      amount: 11000,
-    },
-  ]);
+  const [invoiceData, setInvoiceData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const [editingProduct, setEditingProduct] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -526,8 +370,8 @@ export default function Home() {
     type: "សាច់",
     name: "",
     dueDate: dateUtils.getToday(),
-    quantity: 1,
-    price: 0,
+    quantity: "",
+    price: "",
     amount: 0,
   });
 
@@ -539,6 +383,29 @@ export default function Home() {
   const [itemsPerPage] = useState(5);
 
   const productTypes = ["សាច់", "បន្លែ", "ផ្លែឈើ", "គ្រឿងសមុទ្រ", "ប្រចាំថ្ងៃ"];
+
+  // Fetch products on component mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await productApi.getAll();
+      if (response.success) {
+        setInvoiceData(response.data);
+      } else {
+        setError('Failed to fetch products');
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setError(handleApiError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Enhanced filter system with better organization
   const getFilterCounts = () => {
@@ -600,7 +467,12 @@ export default function Home() {
 
     try {
       if (field === "quantity" || field === "price") {
-        processedValue = Number(value) || 0;
+        // Handle empty string to allow clearing input
+        if (value === "" || value === null || value === undefined) {
+          processedValue = "";
+        } else {
+          processedValue = Number(value) || 0;
+        }
       } else if (field === "dueDate") {
         // Handle date conversion more safely
         if (value === null || value === undefined) {
@@ -619,8 +491,16 @@ export default function Home() {
 
       const newFormData = { ...formData, [field]: processedValue };
 
+      // Only calculate amount if both quantity and price are valid numbers
       if (field === "quantity" || field === "price") {
-        newFormData.amount = newFormData.quantity * newFormData.price;
+        const qty = field === "quantity" ? processedValue : formData.quantity;
+        const price = field === "price" ? processedValue : formData.price;
+        
+        if (qty !== "" && price !== "" && !isNaN(qty) && !isNaN(price)) {
+          newFormData.amount = Number(qty) * Number(price);
+        } else {
+          newFormData.amount = 0;
+        }
       }
 
       setFormData(newFormData);
@@ -630,36 +510,61 @@ export default function Home() {
     }
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     try {
+      setActionLoading(true);
+      setError(null);
+      
+      // Prevent zoom on form submission by blurring active element
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+      
+      // Force viewport scale to 1 (prevent zoom)
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+      }
+      
       // Convert CalendarDate to string for storage
       const productData = {
         ...formData,
         dueDate: dateUtils.dateValueToString(formData.dueDate) || formData.dueDate,
-        amount: formData.quantity * formData.price,
+        // Remove amount as it will be calculated on the backend
+        amount: undefined,
       };
 
       if (editingProduct) {
-        setInvoiceData(
-          invoiceData.map((item) =>
-            item.id === editingProduct.id
-              ? {
-                  ...productData,
-                  id: editingProduct.id,
-                }
-              : item
-          )
-        );
+        // Update existing product
+        const response = await productApi.update(editingProduct.id, productData);
+        if (response.success) {
+          // Refresh the product list
+          await fetchProducts();
+          handleCloseForm();
+        } else {
+          setError('Failed to update product');
+        }
       } else {
-        const newProduct = {
-          ...productData,
-          id: Date.now(),
-        };
-        setInvoiceData([...invoiceData, newProduct]);
+        // Create new product
+        const response = await productApi.create(productData);
+        if (response.success) {
+          // Refresh the product list
+          await fetchProducts();
+          handleCloseForm();
+        } else {
+          setError('Failed to create product');
+        }
       }
-      handleCloseForm();
     } catch (error) {
-      console.error("Add product error:", error);
+      console.error("Add/Update product error:", error);
+      setError(handleApiError(error));
+    } finally {
+      setActionLoading(false);
+      
+      // Ensure focus is removed from any input to prevent zoom
+      if (document.activeElement && document.activeElement.tagName !== 'BODY') {
+        document.activeElement.blur();
+      }
     }
   };
 
@@ -699,15 +604,25 @@ export default function Home() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     try {
-      setInvoiceData(
-        invoiceData.filter((item) => item.id !== productToDelete.id)
-      );
-      setShowDeleteConfirm(false);
-      setProductToDelete(null);
+      setActionLoading(true);
+      setError(null);
+      
+      const response = await productApi.delete(productToDelete.id);
+      if (response.success) {
+        // Refresh the product list
+        await fetchProducts();
+        setShowDeleteConfirm(false);
+        setProductToDelete(null);
+      } else {
+        setError('Failed to delete product');
+      }
     } catch (error) {
       console.error("Delete product error:", error);
+      setError(handleApiError(error));
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -717,14 +632,25 @@ export default function Home() {
   };
 
   const handleCloseForm = () => {
+    // Prevent zoom when closing form
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+    
+    // Force viewport reset
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (viewport) {
+      viewport.content = "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no";
+    }
+    
     setShowAddForm(false);
     setEditingProduct(null);
     setFormData({
       type: "សាច់",
       name: "",
       dueDate: dateUtils.getToday(),
-      quantity: 1,
-      price: 0,
+      quantity: "",
+      price: "",
       amount: 0,
     });
   };
@@ -925,7 +851,7 @@ export default function Home() {
                     size="md"
                     className="w-full"
                     classNames={{
-                      input: "text-base [@media(max-width:768px)]:text-base",
+                      input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
                       inputWrapper:
                         "bg-white shadow-sm border-gray-300 focus-within:border-blue-500",
                     }}
@@ -940,7 +866,42 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 sm:p-4 bg-red-50 border-l-4 border-red-500 mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">{error}</p>
+                    <button 
+                      onClick={() => setError(null)}
+                      className="mt-2 text-xs text-red-600 underline hover:text-red-800"
+                    >
+                      បិទសារ
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center p-8">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
+                  <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{animationDelay: '0.1s'}}></div>
+                  <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                  <span className="text-gray-600 ml-2">កំពុងទាញយកទិន្នន័យ...</span>
+                </div>
+              </div>
+            )}
+
             {/* Enhanced Table Section */}
+            {!loading && (
             <div className="bg-white overflow-x-hidden">
               <Table
                 aria-label="Product inventory table"
@@ -1275,6 +1236,7 @@ export default function Home() {
                 </div>
               )}
             </div>
+            )}
           </CardBody>
         </Card>
 
@@ -1340,8 +1302,10 @@ export default function Home() {
                           variant="bordered"
                           size="md"
                           classNames={{
-                            trigger: "bg-white shadow-sm [@media(width:428px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(width:428px)]:text-sm",
+                            trigger: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
+                            label: "[@media(max-width:768px)]:text-sm",
+                            value: "text-base [@media(max-width:768px)]:text-base",
+                            listbox: "text-base [@media(max-width:768px)]:text-base",
                           }}
                         >
                           {productTypes.map((type) => (
@@ -1371,8 +1335,9 @@ export default function Home() {
                           variant="bordered"
                           size="md"
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm [@media(width:428px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(width:428px)]:text-sm",
+                            inputWrapper: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
+                            label: "[@media(max-width:768px)]:text-sm",
+                            input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
                           }}
                         />
 
@@ -1388,8 +1353,9 @@ export default function Home() {
                           inert={false}
                           classNames={{
                             base: "bg-white",
-                            inputWrapper: "bg-white shadow-sm border-gray-300 focus-within:border-blue-500 [@media(width:428px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(width:428px)]:text-sm",
+                            inputWrapper: "bg-white shadow-sm border-gray-300 focus-within:border-blue-500 [@media(max-width:768px)]:h-12 h-14 rounded-xl",
+                            label: "[@media(max-width:768px)]:text-sm",
+                            input: "text-base [@media(max-width:768px)]:text-base",
                           }}
                         />
 
@@ -1398,17 +1364,23 @@ export default function Home() {
                           type="number"
                           label="បរិមាណ"
                           placeholder="បញ្ចូលបរិមាណ"
-                          value={formData.quantity?.toString() || ""}
-                          onValueChange={(value) =>
-                            handleFormChange("quantity", value)
-                          }
+                          value={formData.quantity === 0 || formData.quantity === "" ? "" : formData.quantity?.toString()}
+                          onValueChange={(value) => {
+                            handleFormChange("quantity", value === "" ? "" : value);
+                          }}
+                          onFocus={() => {
+                            if (formData.quantity === 0 || formData.quantity === 1) {
+                              handleFormChange("quantity", "");
+                            }
+                          }}
                           min="1"
                           isRequired
                           variant="bordered"
                           size="md"
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm [@media(width:428px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(width:428px)]:text-sm",
+                            inputWrapper: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
+                            label: "[@media(max-width:768px)]:text-sm",
+                            input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
                           }}
                         />
 
@@ -1417,21 +1389,27 @@ export default function Home() {
                           type="number"
                           label="តម្លៃ"
                           placeholder="បញ្ចូលតម្លៃ"
-                          value={formData.price?.toString() || ""}
-                          onValueChange={(value) =>
-                            handleFormChange("price", value)
-                          }
+                          value={formData.price === 0 || formData.price === "" ? "" : formData.price?.toString()}
+                          onValueChange={(value) => {
+                            handleFormChange("price", value === "" ? "" : value);
+                          }}
+                          onFocus={() => {
+                            if (formData.price === 0) {
+                              handleFormChange("price", "");
+                            }
+                          }}
                           min="0"
                           step="0.01"
                           isRequired
                           variant="bordered"
                           size="md"
                           endContent={
-                            <span className="text-gray-600 font-medium text-sm [@media(width:428px)]:text-xs">៛</span>
+                            <span className="text-gray-600 font-medium text-sm [@media(max-width:768px)]:text-base">៛</span>
                           }
                           classNames={{
-                            inputWrapper: "bg-white shadow-sm [@media(width:428px)]:h-12 h-14 rounded-xl",
-                            label: "[@media(width:428px)]:text-sm",
+                            inputWrapper: "bg-white shadow-sm [@media(max-width:768px)]:h-12 h-14 rounded-xl",
+                            label: "[@media(max-width:768px)]:text-sm",
+                            input: "text-base [@media(max-width:768px)]:text-base placeholder:text-base [@media(max-width:768px)]:placeholder:text-base",
                           }}
                         />
                       </div>
@@ -1460,14 +1438,23 @@ export default function Home() {
                         }
                       }}
                       isDisabled={
+                        actionLoading ||
                         !formData.name ||
                         !formData.dueDate ||
-                        formData.quantity <= 0 ||
-                        formData.price <= 0
+                        !formData.quantity || 
+                        formData.quantity === "" || 
+                        Number(formData.quantity) <= 0 ||
+                        !formData.price || 
+                        formData.price === "" || 
+                        Number(formData.price) <= 0
                       }
+                      isLoading={actionLoading}
                     >
                       <span className="truncate">
-                        {editingProduct ? "រក្សាទុកការកែប្រែ" : "បន្ថែមទំនិញ"}
+                        {actionLoading 
+                          ? (editingProduct ? "កំពុងរក្សាទុក..." : "កំពុងបន្ថែម...") 
+                          : (editingProduct ? "រក្សាទុកការកែប្រែ" : "បន្ថែមទំនិញ")
+                        }
                       </span>
                     </Button>
                   </ModalFooter>
@@ -1568,8 +1555,10 @@ export default function Home() {
                           color="danger"
                           onPress={confirmDelete}
                           className="flex-1 bg-red-500 text-white rounded-2xl h-12 font-medium hover:bg-red-600"
+                          isDisabled={actionLoading}
+                          isLoading={actionLoading}
                         >
-                          លុប
+                          {actionLoading ? "កំពុងលុប..." : "លុប"}
                         </Button>
                       </div>
                     </div>
@@ -1578,6 +1567,9 @@ export default function Home() {
               )}
             </ModalContent>
           </Modal>
+
+          {/* PWA Install Prompt */}
+          <PWAInstallPrompt />
         </div>
       </div>
     );
