@@ -1210,10 +1210,10 @@ export default function Home() {
             backdrop: "bg-black/50",
             base: "border-none shadow-2xl mx-2 my-4 rounded-2xl w-[90vw] max-w-[500px] md:max-w-[600px] max-h-[85vh]",
             header:
-              "border-b border-gray-200 rounded-t-2xl bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3 flex-shrink-0",
-            body: "px-4 py-4 flex-1 overflow-y-auto",
+              "border-b border-gray-200 rounded-t-2xl bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 flex-shrink-0",
+            body: "px-6 py-6 flex-1 overflow-y-auto",
             footer:
-              "border-t border-gray-200 bg-gray-50 px-4 py-3 flex-shrink-0 rounded-b-2xl",
+              "border-t border-gray-200 bg-gray-50 px-6 py-4 flex-shrink-0 rounded-b-2xl",
           }}
         >
           <ModalContent>
@@ -1240,11 +1240,11 @@ export default function Home() {
                       e.preventDefault();
                       handleCreateProduct();
                     }}
-                    className="space-y-6 sm:space-y-4"
+                    className="space-y-5"
                   >
-                    <div className="grid grid-cols-1 gap-6 sm:gap-4">
+                    <div className="grid grid-cols-1 gap-5">
                       {/* Type Selection */}
-                      <div className="w-full space-y-1">
+                      <div className="w-full space-y-2">
                         <Select
                           label="ប្រភេទទំនិញ"
                           placeholder="ជ្រើសរើសប្រភេទទំនិញ"
@@ -1257,19 +1257,20 @@ export default function Home() {
                           }}
                           isRequired={true}
                           variant="bordered"
-                          size="md"
-                          radius="md"
+                          size="lg"
+                          radius="lg"
+                          labelPlacement="outside"
                           classNames={{
                             base: "w-full",
                             trigger:
-                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md data-[focus=true]:border-blue-500 data-[focus=true]:shadow-md data-[open=true]:border-blue-500 data-[open=true]:shadow-md",
+                              "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md data-[focus=true]:border-blue-500 data-[focus=true]:shadow-lg data-[open=true]:border-blue-500 data-[open=true]:shadow-lg",
                             label:
-                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                              "text-base text-gray-700 mb-1",
                             value:
-                              "text-xs sm:text-sm font-medium text-gray-900",
-                            listbox: "rounded-lg text-xs sm:text-sm",
+                              "text-base font-medium text-gray-900",
+                            listbox: "rounded-lg text-base",
                             popoverContent:
-                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                              "rounded-lg shadow-xl border-0 bg-white backdrop-blur-sm text-base",
                             listboxWrapper: "rounded-lg",
                           }}
                         >
@@ -1285,7 +1286,7 @@ export default function Home() {
                               classNames={{
                                 base: "rounded-lg my-0.5 data-[hover=true]:bg-blue-50 data-[selectable=true]:focus:bg-blue-100 data-[pressed=true]:opacity-70",
                                 title:
-                                  "text-xs sm:text-sm font-medium text-gray-900",
+                                  "text-base sm:text-sm font-medium text-gray-900",
                               }}
                             >
                               {type}
@@ -1295,7 +1296,7 @@ export default function Home() {
                       </div>
 
                       {/* Product Name */}
-                      <div className="w-full space-y-1">
+                      <div className="w-full space-y-2">
                         <Input
                           label="ឈ្មោះទំនិញ"
                           placeholder="បញ្ចូលឈ្មោះទំនិញរបស់អ្នក"
@@ -1305,22 +1306,23 @@ export default function Home() {
                           }
                           isRequired
                           variant="bordered"
-                          size="md"
-                          radius="md"
+                          size="lg"
+                          radius="lg"
+                          labelPlacement="outside"
                           classNames={{
                             base: "w-full",
                             inputWrapper:
-                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                              "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
                             label:
-                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                              "text-base text-gray-700 mb-1",
                             input:
-                              "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                              "text-base font-medium text-gray-900 placeholder:text-base placeholder:text-gray-400 placeholder:font-normal",
                           }}
                         />
                       </div>
 
                       {/* Due Date */}
-                      <div className="w-full space-y-1">
+                      <div className="w-full space-y-2">
                         <DatePicker
                           label="កាលបរិច្ឆេទ"
                           value={createFormData.dueDate}
@@ -1329,28 +1331,29 @@ export default function Home() {
                           }
                           isRequired
                           variant="bordered"
-                          size="md"
-                          radius="md"
+                          size="lg"
+                          radius="lg"
+                          labelPlacement="outside"
                           showMonthAndYearPickers
                           inert={false}
                           classNames={{
                             base: "w-full",
                             inputWrapper:
-                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                              "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
                             label:
-                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                              "text-base text-gray-700 mb-1",
                             input:
-                              "text-xs sm:text-sm font-medium text-gray-900",
+                              "text-base font-medium text-gray-900",
                             popoverContent:
-                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                              "rounded-lg shadow-xl border-0 bg-white backdrop-blur-sm text-base",
                           }}
                         />
                       </div>
 
                       {/* Quantity and Price Row */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         {/* Quantity */}
-                        <div className="w-full space-y-1">
+                        <div className="w-full space-y-2">
                           <Input
                             type="text"
                             inputMode="numeric"
@@ -1378,22 +1381,23 @@ export default function Home() {
                             }}
                             isRequired
                             variant="bordered"
-                            size="md"
-                            radius="md"
+                            size="lg"
+                            radius="lg"
+                            labelPlacement="outside"
                             classNames={{
                               base: "w-full",
                               inputWrapper:
-                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                                "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
                               label:
-                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                                "text-base text-gray-700 mb-1",
                               input:
-                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                                "text-base font-medium text-gray-900 placeholder:text-base placeholder:text-gray-400 placeholder:font-normal",
                             }}
                           />
                         </div>
 
                         {/* Price */}
-                        <div className="w-full space-y-1">
+                        <div className="w-full space-y-2">
                           <Input
                             type="text"
                             inputMode="decimal"
@@ -1418,11 +1422,12 @@ export default function Home() {
                             }}
                             isRequired
                             variant="bordered"
-                            size="md"
-                            radius="md"
+                            size="lg"
+                            radius="lg"
+                            labelPlacement="outside"
                             endContent={
                               <div className="flex items-center">
-                                <span className="text-gray-600 font-medium text-xs sm:text-sm bg-gray-100 px-2 py-0.5 rounded-md">
+                                <span className="text-gray-600 font-medium text-base bg-gray-100 px-2 py-1 rounded-md">
                                   ៛
                                 </span>
                               </div>
@@ -1430,11 +1435,11 @@ export default function Home() {
                             classNames={{
                               base: "w-full",
                               inputWrapper:
-                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
+                                "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-blue-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-blue-400 data-[hover=true]:shadow-md",
                               label:
-                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-blue-600",
+                                "text-base text-gray-700 mb-1",
                               input:
-                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                                "text-base font-medium text-gray-900 placeholder:text-base placeholder:text-gray-400 placeholder:font-normal",
                             }}
                           />
                         </div>
@@ -1458,22 +1463,22 @@ export default function Home() {
                 </ModalBody>
 
                 <ModalFooter>
-                  <div className="flex gap-3 w-full">
+                  <div className="flex gap-4 w-full">
                     <Button
                       color="danger"
                       variant="light"
                       onPress={onClose}
-                      size="md"
-                      radius="md"
-                      className="flex-1 text-sm font-medium h-12 sm:h-10 min-w-0 hover:bg-red-50"
+                      size="lg"
+                      radius="lg"
+                      className="flex-1 text-base font-medium h-12 min-w-0 hover:bg-red-50"
                     >
                       បោះបង់
                     </Button>
                     <Button
                       color="primary"
-                      size="md"
-                      radius="md"
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold text-sm h-12 sm:h-10 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
+                      size="lg"
+                      radius="lg"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 font-semibold text-base h-12 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
                       onPress={() => {
                         try {
                           handleCreateProduct();
@@ -1520,10 +1525,10 @@ export default function Home() {
             backdrop: "bg-black/50",
             base: "border-none shadow-2xl mx-2 my-4 rounded-2xl w-[90vw] max-w-[500px] md:max-w-[600px] max-h-[85vh]",
             header:
-              "border-b border-gray-200 rounded-t-2xl bg-gradient-to-r from-amber-50 to-orange-50 px-4 py-3 flex-shrink-0",
-            body: "px-4 py-4 flex-1 overflow-y-auto",
+              "border-b border-gray-200 rounded-t-2xl bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4 flex-shrink-0",
+            body: "px-6 py-6 flex-1 overflow-y-auto",
             footer:
-              "border-t border-gray-200 bg-gray-50 px-4 py-3 flex-shrink-0 rounded-b-2xl",
+              "border-t border-gray-200 bg-gray-50 px-6 py-4 flex-shrink-0 rounded-b-2xl",
           }}
         >
           <ModalContent>
@@ -1550,11 +1555,11 @@ export default function Home() {
                       e.preventDefault();
                       handleUpdateProduct();
                     }}
-                    className="space-y-6 sm:space-y-4"
+                    className="space-y-5"
                   >
-                    <div className="grid grid-cols-1 gap-6 sm:gap-4">
+                    <div className="grid grid-cols-1 gap-5">
                       {/* Type Selection */}
-                      <div className="w-full space-y-1">
+                      <div className="w-full space-y-2">
                         <Select
                           label="ប្រភេទទំនិញ"
                           placeholder="ជ្រើសរើសប្រភេទទំនិញ"
@@ -1567,19 +1572,20 @@ export default function Home() {
                           }}
                           isRequired={true}
                           variant="bordered"
-                          size="md"
-                          radius="md"
+                          size="lg"
+                          radius="lg"
+                          labelPlacement="outside"
                           classNames={{
                             base: "w-full",
                             trigger:
-                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md data-[focus=true]:border-amber-500 data-[focus=true]:shadow-md data-[open=true]:border-amber-500 data-[open=true]:shadow-md",
+                              "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md data-[focus=true]:border-amber-500 data-[focus=true]:shadow-lg data-[open=true]:border-amber-500 data-[open=true]:shadow-lg",
                             label:
-                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                              "text-base text-gray-700 mb-1",
                             value:
-                              "text-xs sm:text-sm font-medium text-gray-900",
-                            listbox: "rounded-lg text-xs sm:text-sm",
+                              "text-base font-medium text-gray-900",
+                            listbox: "rounded-lg text-base",
                             popoverContent:
-                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                              "rounded-lg shadow-xl border-0 bg-white backdrop-blur-sm text-base",
                             listboxWrapper: "rounded-lg",
                           }}
                         >
@@ -1605,7 +1611,7 @@ export default function Home() {
                       </div>
 
                       {/* Product Name */}
-                      <div className="w-full space-y-1">
+                      <div className="w-full space-y-2">
                         <Input
                           label="ឈ្មោះទំនិញ"
                           placeholder="បញ្ចូលឈ្មោះទំនិញរបស់អ្នក"
@@ -1615,22 +1621,23 @@ export default function Home() {
                           }
                           isRequired
                           variant="bordered"
-                          size="md"
-                          radius="md"
+                          size="lg"
+                          radius="lg"
+                          labelPlacement="outside"
                           classNames={{
                             base: "w-full",
                             inputWrapper:
-                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                              "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
                             label:
-                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                              "text-base text-gray-700 mb-1",
                             input:
-                              "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                              "text-base font-medium text-gray-900 placeholder:text-base placeholder:text-gray-400 placeholder:font-normal",
                           }}
                         />
                       </div>
 
                       {/* Due Date */}
-                      <div className="w-full space-y-1">
+                      <div className="w-full space-y-2">
                         <DatePicker
                           label="កាលបរិច្ឆេទ"
                           value={editFormData.dueDate}
@@ -1639,28 +1646,29 @@ export default function Home() {
                           }
                           isRequired
                           variant="bordered"
-                          size="md"
-                          radius="md"
+                          size="lg"
+                          radius="lg"
+                          labelPlacement="outside"
                           showMonthAndYearPickers
                           inert={false}
                           classNames={{
                             base: "w-full",
                             inputWrapper:
-                              "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                              "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
                             label:
-                              "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                              "text-base text-gray-700 mb-1",
                             input:
-                              "text-xs sm:text-sm font-medium text-gray-900",
+                              "text-base font-medium text-gray-900",
                             popoverContent:
-                              "rounded-xl shadow-xl border-0 bg-white/95 backdrop-blur-md text-xs sm:text-sm",
+                              "rounded-lg shadow-xl border-0 bg-white backdrop-blur-sm text-base",
                           }}
                         />
                       </div>
 
                       {/* Quantity and Price Row */}
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         {/* Quantity */}
-                        <div className="w-full space-y-1">
+                        <div className="w-full space-y-2">
                           <Input
                             type="text"
                             inputMode="numeric"
@@ -1688,22 +1696,23 @@ export default function Home() {
                             }}
                             isRequired
                             variant="bordered"
-                            size="md"
-                            radius="md"
+                            size="lg"
+                            radius="lg"
+                            labelPlacement="outside"
                             classNames={{
                               base: "w-full",
                               inputWrapper:
-                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                                "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
                               label:
-                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                                "text-base text-gray-700 mb-1",
                               input:
-                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                                "text-base font-medium text-gray-900 placeholder:text-base placeholder:text-gray-400 placeholder:font-normal",
                             }}
                           />
                         </div>
 
                         {/* Price */}
-                        <div className="w-full space-y-1">
+                        <div className="w-full space-y-2">
                           <Input
                             type="text"
                             inputMode="decimal"
@@ -1728,11 +1737,12 @@ export default function Home() {
                             }}
                             isRequired
                             variant="bordered"
-                            size="md"
-                            radius="md"
+                            size="lg"
+                            radius="lg"
+                            labelPlacement="outside"
                             endContent={
                               <div className="flex items-center">
-                                <span className="text-gray-600 font-medium text-xs sm:text-sm bg-gray-100 px-2 py-0.5 rounded-md">
+                                <span className="text-gray-600 font-medium text-base bg-gray-100 px-2 py-1 rounded-md">
                                   ៛
                                 </span>
                               </div>
@@ -1740,11 +1750,11 @@ export default function Home() {
                             classNames={{
                               base: "w-full",
                               inputWrapper:
-                                "bg-white/90 backdrop-blur-sm shadow-sm border-2 border-gray-200 h-14 sm:h-12 rounded-xl transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-md data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
+                                "bg-white shadow-sm border-2 border-gray-200 h-12 rounded-lg transition-all duration-200 group-data-[focus=true]:border-amber-500 group-data-[focus=true]:shadow-lg data-[hover=true]:border-amber-400 data-[hover=true]:shadow-md",
                               label:
-                                "text-xs font-medium text-gray-700 group-data-[filled=true]:text-amber-600",
+                                "text-base text-gray-700 mb-1",
                               input:
-                                "text-xs sm:text-sm font-medium text-gray-900 placeholder:text-xs placeholder:text-gray-500 placeholder:font-normal",
+                                "text-base font-medium text-gray-900 placeholder:text-base placeholder:text-gray-400 placeholder:font-normal",
                             }}
                           />
                         </div>
@@ -1754,7 +1764,7 @@ export default function Home() {
                       {editFormData.amount > 0 && (
                         <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-200 rounded-xl p-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-emerald-700">
+                            <span className="text-base font-medium text-emerald-700">
                               សរុបទាំងអស់
                             </span>
                             <span className="text-sm sm:text-lg font-bold text-emerald-600">
@@ -1768,22 +1778,22 @@ export default function Home() {
                 </ModalBody>
 
                 <ModalFooter>
-                  <div className="flex gap-3 w-full">
+                  <div className="flex gap-4 w-full">
                     <Button
                       color="danger"
                       variant="light"
                       onPress={onClose}
-                      size="md"
-                      radius="md"
-                      className="flex-1 text-sm font-medium h-12 sm:h-10 min-w-0 hover:bg-red-50"
+                      size="lg"
+                      radius="lg"
+                      className="flex-1 text-base font-medium h-12 min-w-0 hover:bg-red-50"
                     >
                       បោះបង់
                     </Button>
                     <Button
                       color="warning"
-                      size="md"
-                      radius="md"
-                      className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 font-semibold text-sm h-12 sm:h-10 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
+                      size="lg"
+                      radius="lg"
+                      className="flex-1 bg-gradient-to-r from-amber-600 to-orange-600 font-semibold text-base h-12 min-w-0 shadow-md hover:shadow-lg transition-all duration-200"
                       onPress={() => {
                         try {
                           handleUpdateProduct();

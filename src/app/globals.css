@@ -151,10 +151,10 @@ select.no-select-highlight option::selection {
     font-size: 14px !important;
   }
 
-  /* Smaller font for labels and placeholders in mobile */
+  /* Allow labels to use component-defined sizes */
   [data-slot="label"],
   .nextui-input label {
-    font-size: 12px !important;
+    /* font-size: 12px !important; - Removed to allow component control */
   }
 }
 
