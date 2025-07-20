@@ -6,11 +6,11 @@
   "keywords": ["pwa", "product", "inventory", "management", "cambodia", "khmer", "nextjs"],
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "DATABASE_URL=${DATABASE_URL:-file:./build.db} prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "build:pwa": "next build && next export",
+    "build:pwa": "prisma generate && next build && next export",
     "serve:pwa": "npx serve out",
     "db:setup": "node scripts/setup-db.js",
     "db:studio": "npx prisma studio",
@@ -28,14 +28,15 @@
     "prisma": "^6.12.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^3.4.0"
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/node": "^20.0.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
-    "postcss": "^8.4.31",
-    "typescript": "^5.0.0"
+    "postcss": "^8.4.31"
   }
 }
